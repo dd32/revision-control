@@ -181,23 +181,32 @@ function rc_perpost_value($post_ID) {
 
 	switch ( $_POST['revision-control'] ) {
 		case 'true':
-			if ( RC_REVISION_DEFAULT === true && '' === get_post_meta($post_ID, '_revision-control') )
+			if ( RC_REVISION_DEFAULT === true ) {
+				if ('' !== get_post_meta($post_ID, '_revision-control') )
+					delete_post_meta($post_ID, '_revision-control');
 				return;
+			}
 
 			update_post_meta($post_ID, '_revision-control', true);
 			$number_to_delete = false;
 			break;
 		case 'false':
-			if ( RC_REVISION_DEFAULT === 0 && '' === get_post_meta($post_ID, '_revision-control') )
+			if ( RC_REVISION_DEFAULT === 0 ) {
+				if ('' !== get_post_meta($post_ID, '_revision-control') )
+					delete_post_meta($post_ID, '_revision-control');
 				return;
+			}
 
 			update_post_meta($post_ID, '_revision-control', 0);
 			$number_to_delete = 0;
 			break;
 		case 'number':
 			$number_to_delete = (int)$_POST['revision-control-number'];
-			if ( RC_REVISION_DEFAULT === $number_to_delete && '' === get_post_meta($post_ID, '_revision-control') )
+			if ( RC_REVISION_DEFAULT === $number_to_delete ) {
+				if ('' !== get_post_meta($post_ID, '_revision-control') )
+					delete_post_meta($post_ID, '_revision-control');
 				return;
+			}
 
 			update_post_meta($post_ID, '_revision-control', $number_to_delete);
 			break;
