@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-24 13:22+1000\n"
-"PO-Revision-Date: 2008-07-24 08:03+0100\n"
+"POT-Creation-Date: 2008-07-27 18:02+1000\n"
+"PO-Revision-Date: 2008-07-27 12:23+0100\n"
 "Last-Translator: \n"
 "Language-Team: SteAgl <stefano.aglietti@gmail.com>\n"
 "MIME-Version: 1.0\n"
@@ -17,69 +17,78 @@ msgstr ""
 "X-Poedit-Basepath: ../\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: revision-control.php:39
-#: revision-control.php:245
+#: revision-control.php:38
+#: revision-control.php:151
+#: revision-control.php:283
 msgid "Revisions"
 msgstr "Revisioni"
 
-#: revision-control.php:39
-#: revision-control.php:286
+#: revision-control.php:41
+#: revision-control.php:326
 msgid "Revision Control"
 msgstr "Controllo revisioni"
 
-#: revision-control.php:126
+#: revision-control.php:142
 msgid "Post Revisions"
 msgstr "Revisioni articolo"
 
-#: revision-control.php:136
-msgid "Revisions:"
-msgstr "Revisioni:"
-
-#: revision-control.php:138
-#: revision-control.php:296
-#: revision-control.php:314
+#: revision-control.php:153
+#: revision-control.php:336
+#: revision-control.php:357
 msgid "Enabled"
 msgstr "Abilitate"
 
-#: revision-control.php:140
-#: revision-control.php:298
-#: revision-control.php:316
+#: revision-control.php:154
+#: revision-control.php:157
+#: revision-control.php:163
+msgid " (default)"
+msgstr " (predefinito)"
+
+#: revision-control.php:156
+#: revision-control.php:339
+#: revision-control.php:360
 msgid "Disabled"
 msgstr "Disabilitate"
 
-#: revision-control.php:142
-#: revision-control.php:301
-#: revision-control.php:319
-msgid "Limit to"
-msgstr "Limitate a"
-
-#: revision-control.php:145
-#: revision-control.php:304
-#: revision-control.php:322
+#: revision-control.php:163
+#: revision-control.php:346
+#: revision-control.php:366
 #, php-format
-msgid "%d Revisions"
-msgstr "%d revisioni"
+msgid "Limit to %d Revisions"
+msgstr "Limite di %d revisioni"
 
-#: revision-control.php:278
+#: revision-control.php:252
+msgid "Are you sure you wish to delete this Revision?"
+msgstr "Si è sicuri di volre cancellare questa revisione?"
+
+#: revision-control.php:252
+msgid "(delete)"
+msgstr "(cancella)"
+
+#: revision-control.php:318
 msgid "Settings saved."
 msgstr "Le impostazioni sono state salvate."
 
-#: revision-control.php:283
+#: revision-control.php:323
 msgid "<strong>Error:</strong> You have defined <code>WP_POST_REVISIONS</code> in your <code>wp-config.php</code> file, In order to use this plugin you will need to remove it."
 msgstr "<strong>Errore:</strong> Nel file <code>wp-config.php</code> la variabile <code>WP_POST_REVISIONS</code> è definita. Per poter usare questo plugin occorrerà rimuoverla."
 
-#: revision-control.php:292
+#: revision-control.php:332
 msgid "Default Revision Status for Posts"
 msgstr "Stato predefinito revisioni per gli articoli"
 
-#: revision-control.php:310
+#: revision-control.php:353
 msgid "Default Revision Status for Pages"
 msgstr "Stato predefinito revisioni per le pagine"
 
-#: revision-control.php:329
+#: revision-control.php:374
 msgid "Save Changes"
 msgstr "Salva le modifiche"
 
+#~ msgid "Revisions:"
+#~ msgstr "Revisioni:"
+#~ msgid "Limit to"
+#~ msgstr "Limitate a"
 #~ msgid "<h1>Add From Server</h1> Sorry, This plugin requires WordPress 2.5+"
 #~ msgstr ""
 #~ "<h1>Aggiungi da server</h1> Questo plugin richiede almeno WordPress 2.5+"
