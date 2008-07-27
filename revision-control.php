@@ -2,9 +2,9 @@
 /*
 Plugin Name: Revision Control
 Plugin URI: http://dd32.id.au/wordpress-plugins/revision-control/
-Description: Allows finer control over the number of Revisions stored on a global & per-post basis.
+Description: Allows finer control over the number of Revisions stored on a global & per-post/page basis.
 Author: Dion Hulse
-Version: 1.3
+Version: 1.5
 */
 
 /**
@@ -14,7 +14,7 @@ Version: 1.3
 add_action('plugins_loaded', 'rc_loaded');
 function rc_loaded() {
 	if ( defined('WP_POST_REVISIONS') && defined('WP_ADMIN') ) {
-		$GLOBALS['rc_allreadydefined'] = true; //Lets notify the user about this on the Revision control menu item.
+		define('RC_DEFINED_BAD', true); //Lets notify the user about this on the Revision control menu item.
 		return;
 	}
 
@@ -26,7 +26,6 @@ function rc_loaded() {
 
 	//Now the Defines.
 	rc_define();
-
 }
 
 /**
@@ -74,6 +73,8 @@ function rc_define() {
 		return;
 	
 	$revision_status = isset($defaults[ $type ]) ? $defaults[ $type ] : true;
+	
+	define('RC_REVISION_DEFAULT', $revision_status);
 
 	if ( $current_post ) {
 		//Handle per-post/page settings.
@@ -101,9 +102,9 @@ function rc_get_page_type( $id = 0 ) {
 
 	if ( isset($_POST['post_type']) )
 		return $_POST['post_type'];
-	else if ( 'page.php' == $pagenow )
+	else if ( 'page.php' == $pagenow || 'page-new.php' == $pagenow)
 		return 'page';
-	else if ( 'post.php' == $pagenow )
+	else if ( 'post.php' == $pagenow || 'post-new.php' == $pagenow)
 		return 'post';
 	else if ( $id && $post = get_post($id) )
 		return $post->post_type;
@@ -147,18 +148,24 @@ function rc_meta_box_manip($page, $context) {
 function rc_revisions_meta_box( $post ) {
 	rc_list_post_revisions();
 	?>
-	<strong><?php _e('Revisions:', 'revision-control') ?></strong>
-	<input name="revision-control" type="radio" value="true" <?php
-		if ( WP_POST_REVISIONS === true ) echo ' checked="checked"' ?> /> <?php _e('Enabled', 'revision-control') ?> &nbsp;&nbsp;
-	<input name="revision-control" type="radio" value="false" <?php
-		if ( WP_POST_REVISIONS === 0 ) echo ' checked="checked"' ?>/> <?php _e('Disabled', 'revision-control') ?> &nbsp;&nbsp;
-	<input name="revision-control" type="radio" value="number" <?php
-		if ( WP_POST_REVISIONS > 1 ) echo ' checked="checked"' ?>/><?php _e('Limit to', 'revision-control') ?>
-	<select name="revision-control-number">
+	<strong><?php _e('Revisions', 'revision-control') ?>:</strong>
+	<input name="revision-control" id="revision-control-true" type="radio" value="true" <?php
+		if ( WP_POST_REVISIONS === true ) echo ' checked="checked"' ?> /><label for="revision-control-true"><?php _e('Enabled', 'revision-control');
+		if ( RC_REVISION_DEFAULT === true ) echo '<strong>' . __(' (default)', 'revision-control') . '</strong>' ?></label>&nbsp;&nbsp;
+	<input name="revision-control" id="revision-control-false" type="radio" value="false" <?php
+		if ( WP_POST_REVISIONS === 0 ) echo ' checked="checked"' ?>/><label for="revision-control-false"><?php _e('Disabled', 'revision-control');
+		if ( RC_REVISION_DEFAULT === 0 ) echo '<strong>' . __(' (default)', 'revision-control') . '</strong>' ?></label> &nbsp;&nbsp;
+	<input name="revision-control" id="revision-control-number" type="radio" value="number" <?php
+		if ( WP_POST_REVISIONS > 1 ) echo ' checked="checked"' ?>/>
+	<label for="revision-control-number">
+	<select name="revision-control-number" onclick="jQuery('#revision-control-number').attr('checked', 'checked');">
 		<?php for ( $i = 2; $i < 15; $i++ ) : ?>
-		<option value="<?php echo $i ?>"<?php if ( WP_POST_REVISIONS === $i ) echo ' selected="selected"' ?>><?php printf( __('%d Revisions', 'revision-control'), $i) ?></option>
+		<option value="<?php echo $i ?>"<?php if ( WP_POST_REVISIONS === $i ) echo ' selected="selected"'
+			?>><?php printf( __('Limit to %d Revisions', 'revision-control'), $i);
+				if ( RC_REVISION_DEFAULT == $i ) _e(' (default)', 'revision-control'); ?></option>
 		<?php endfor; ?>
 	</select>
+	</label>
 	<?php
 }
 
@@ -172,20 +179,16 @@ function rc_perpost_value($post_ID) {
 	if ( 'number' == $_POST['revision-control'] && ! isset($_POST['revision-control-number']) )
 		return;
 
-	$type = rc_get_page_type();
-	$defaults = get_option('revision-control');
-	$defuault = isset($defaults[$type]) ? $defaults[$type] : true;
-
 	switch ( $_POST['revision-control'] ) {
 		case 'true':
-			if ( $default === true && '' === get_post_meta($post_ID, '_revision-control') )
+			if ( RC_REVISION_DEFAULT === true && '' === get_post_meta($post_ID, '_revision-control') )
 				return;
 
 			update_post_meta($post_ID, '_revision-control', true);
 			$number_to_delete = false;
 			break;
 		case 'false':
-			if ( $default === 0 && '' === get_post_meta($post_ID, '_revision-control') )
+			if ( RC_REVISION_DEFAULT === 0 && '' === get_post_meta($post_ID, '_revision-control') )
 				return;
 
 			update_post_meta($post_ID, '_revision-control', 0);
@@ -193,11 +196,14 @@ function rc_perpost_value($post_ID) {
 			break;
 		case 'number':
 			$number_to_delete = (int)$_POST['revision-control-number'];
-			if ( $default === $number_to_delete && '' === get_post_meta($post_ID, '_revision-control') )
+			if ( RC_REVISION_DEFAULT === $number_to_delete && '' === get_post_meta($post_ID, '_revision-control') )
 				return;
 
 			update_post_meta($post_ID, '_revision-control', $number_to_delete);
 			break;
+		default:
+			//Abort! Abort!
+			return;
 	}
 
 	if ( is_integer($number_to_delete) ) {
@@ -258,9 +264,10 @@ function rc_list_post_revisions( $post_id = 0 ) {
 add_action('admin_post_delete-revision', 'rc_delete_revision');
 function rc_delete_revision() {
 	$revision = absint($_REQUEST['revision']);
-	check_admin_referer('delete_revision-' . $revision);
-	if ( current_user_can('delete_post', $revision) ) {
-		wp_delete_post_revision( $revision );
+	if ( $revision ) {
+		check_admin_referer('delete_revision-' . $revision);
+		if ( current_user_can('delete_post', $revision) )
+			wp_delete_post_revision( $revision );
 	}
 	wp_safe_redirect(wp_get_referer());
 }
@@ -314,7 +321,7 @@ function rc_admin() {
 		}
 	}
 	?>
-	<?php if ( isset($GLOBALS['rc_allreadydefined']) ) : ?>
+	<?php if ( defined('RC_DEFINED_BAD') ) : ?>
 		<div class="message error"><p><?php _e('<strong>Error:</strong> You have defined <code>WP_POST_REVISIONS</code> in your <code>wp-config.php</code> file, In order to use this plugin you will need to remove it.', 'revision-control') ?></p></div>
 	<?php endif; ?>
 	<div class="wrap">
@@ -326,37 +333,42 @@ function rc_admin() {
 		<tr valign="top">
 			<th scope="row"><label for="revision-control-post"> <?php _e('Default Revision Status for Posts', 'revision-control') ?></label></th>
 			<td>
-				<input name="revision-control-post" type="radio" value="true" <?php
-					if (	$defaults['post'] === true || 
-							$defaults['post'] === false ) echo ' checked="checked"' ?> /> <?php _e('Enabled', 'revision-control') ?><br />
-				<input name="revision-control-post" type="radio" value="false" <?php
-					if (	$defaults['post'] === 0 ) echo ' checked="checked"' ?>/> <?php _e('Disabled', 'revision-control') ?><br />
-				<input name="revision-control-post" type="radio" value="number" <?php
-					if (	is_numeric( $defaults['post'] ) &&
-							$defaults['post'] > 1 ) echo ' checked="checked"' ?>/><?php _e('Limit to', 'revision-control') ?>
-				<select name="revision-control-post-number">
-					<?php for ( $i = 2; $i < 15; $i++ ) : ?>
-					<option value="<?php echo $i ?>"<?php if ( $defaults['post'] === $i ) echo ' selected="selected"' ?>><?php printf( __('%d Revisions', 'revision-control'), $i) ?></option>
-					<?php endfor; ?>
-				</select>
+				<input name="revision-control-post" id="revision-control-post-true" type="radio" value="true" <?php
+					if ( $defaults['post'] === true || $defaults['post'] === false ) echo ' checked="checked"' ?> />
+					<label for="revision-control-post-true"><?php _e('Enabled', 'revision-control') ?></label><br />
+				<input name="revision-control-post" id="revision-control-post-false" type="radio" value="false" <?php
+					if ( $defaults['post'] === 0 ) echo ' checked="checked"' ?>/>
+					<label for="revision-control-post-false"><?php _e('Disabled', 'revision-control') ?></label><br />
+				<input name="revision-control-post" id="revision-control-post-number" type="radio" value="number" <?php
+					if ( is_numeric( $defaults['post'] ) && $defaults['post'] > 1 ) echo ' checked="checked"' ?>/>
+					<label for="revision-control-post-number">
+						<select name="revision-control-post-number" onclick="jQuery('#revision-control-post-number').attr('checked', 'checked');">
+							<?php for ( $i = 2; $i < 15; $i++ ) : ?>
+							<option value="<?php echo $i ?>"<?php if ( WP_POST_REVISIONS === $i ) echo ' selected="selected"'
+								?>><?php printf( __('Limit to %d Revisions', 'revision-control'), $i) ?></option>
+							<?php endfor; ?>
+						</select>
+					</label>
 			</td>
 		</tr>
 		<tr valign="top">
 			<th scope="row"><label for="revision-control-page"> <?php _e('Default Revision Status for Pages', 'revision-control') ?></label></th>
 			<td>
-				<input name="revision-control-page" type="radio" value="true" <?php
-					if (	$defaults['page'] === true || 
-							$defaults['page'] === false ) echo ' checked="checked"' ?> /> <?php _e('Enabled', 'revision-control') ?><br />
-				<input name="revision-control-page" type="radio" value="false" <?php
-					if (	$defaults['page'] === 0 ) echo ' checked="checked"' ?>/> <?php _e('Disabled', 'revision-control') ?><br />
-				<input name="revision-control-page" type="radio" value="number" <?php
-					if (	is_numeric( $defaults['page'] ) &&
-							$defaults['post'] > 1 ) echo ' checked="checked"' ?>/><?php _e('Limit to', 'revision-control') ?>
-				<select name="revision-control-page-number">
-					<?php for ( $i = 2; $i < 15; $i++ ) : ?>
-					<option value="<?php echo $i ?>"<?php if ( $defaults['page'] === $i ) echo ' selected="selected"' ?>><?php printf( __('%d Revisions', 'revision-control'), $i) ?></option>
-					<?php endfor; ?>
-				</select>
+				<input name="revision-control-page" id="revision-control-page-true" type="radio" value="true" <?php
+					if ( $defaults['page'] === true || $defaults['page'] === false ) echo ' checked="checked"' ?> />
+					<label for="revision-control-page-true"><?php _e('Enabled', 'revision-control') ?></label><br />
+				<input name="revision-control-page" id="revision-control-page-false" type="radio" value="false" <?php
+					if ( $defaults['page'] === 0 ) echo ' checked="checked"' ?>/>
+					<label for="revision-control-page-false"><?php _e('Disabled', 'revision-control') ?></label><br />
+				<input name="revision-control-page" id="revision-control-page-number" type="radio" value="number" <?php
+					if ( is_numeric( $defaults['page'] ) && $defaults['post'] > 1 ) echo ' checked="checked"' ?>/>
+					<label for="revision-control-page-number">
+						<select name="revision-control-page-number" onclick="jQuery('#revision-control-page-number').attr('checked', 'checked');">
+							<?php for ( $i = 2; $i < 15; $i++ ) : ?>
+							<option value="<?php echo $i ?>"<?php if ( WP_POST_REVISIONS === $i ) echo ' selected="selected"' ?>><?php printf( __('Limit to %d Revisions', 'revision-control'), $i) ?></option>
+							<?php endfor; ?>
+						</select>
+					</label>
 			</td>
 		</tr>
 	</table>

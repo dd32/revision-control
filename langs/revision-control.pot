@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Revision Control\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-24 13:22+1000\n"
+"POT-Creation-Date: 2008-07-27 18:02+1000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Dion Hulse <contact@dd32.id.au>\n"
 "Language-Team:  <contact@dd32.id.au>\n"
@@ -16,66 +16,71 @@ msgstr ""
 "X-Poedit-KeywordsList: __;_e\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: revision-control.php:39
-#: revision-control.php:245
+#: revision-control.php:38
+#: revision-control.php:151
+#: revision-control.php:283
 msgid "Revisions"
 msgstr ""
 
-#: revision-control.php:39
-#: revision-control.php:286
+#: revision-control.php:41
+#: revision-control.php:326
 msgid "Revision Control"
 msgstr ""
 
-#: revision-control.php:126
+#: revision-control.php:142
 msgid "Post Revisions"
 msgstr ""
 
-#: revision-control.php:136
-msgid "Revisions:"
-msgstr ""
-
-#: revision-control.php:138
-#: revision-control.php:296
-#: revision-control.php:314
+#: revision-control.php:153
+#: revision-control.php:336
+#: revision-control.php:357
 msgid "Enabled"
 msgstr ""
 
-#: revision-control.php:140
-#: revision-control.php:298
-#: revision-control.php:316
+#: revision-control.php:154
+#: revision-control.php:157
+#: revision-control.php:163
+msgid " (default)"
+msgstr ""
+
+#: revision-control.php:156
+#: revision-control.php:339
+#: revision-control.php:360
 msgid "Disabled"
 msgstr ""
 
-#: revision-control.php:142
-#: revision-control.php:301
-#: revision-control.php:319
-msgid "Limit to"
-msgstr ""
-
-#: revision-control.php:145
-#: revision-control.php:304
-#: revision-control.php:322
+#: revision-control.php:163
+#: revision-control.php:346
+#: revision-control.php:366
 #, php-format
-msgid "%d Revisions"
+msgid "Limit to %d Revisions"
 msgstr ""
 
-#: revision-control.php:278
+#: revision-control.php:252
+msgid "Are you sure you wish to delete this Revision?"
+msgstr ""
+
+#: revision-control.php:252
+msgid "(delete)"
+msgstr ""
+
+#: revision-control.php:318
 msgid "Settings saved."
 msgstr ""
 
-#: revision-control.php:283
+#: revision-control.php:323
 msgid "<strong>Error:</strong> You have defined <code>WP_POST_REVISIONS</code> in your <code>wp-config.php</code> file, In order to use this plugin you will need to remove it."
 msgstr ""
 
-#: revision-control.php:292
+#: revision-control.php:332
 msgid "Default Revision Status for Posts"
 msgstr ""
 
-#: revision-control.php:310
+#: revision-control.php:353
 msgid "Default Revision Status for Pages"
 msgstr ""
 
-#: revision-control.php:329
+#: revision-control.php:374
 msgid "Save Changes"
 msgstr ""
 
