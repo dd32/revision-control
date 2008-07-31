@@ -1,48 +1,48 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: revison contorol ja\n"
+"Project-Id-Version: revison contorol zh-tw\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-07-31 13:06+1000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Dion Hulse <contact@dd32.id.au>\n"
-"Language-Team: tekapo <tekapo@gmail.com>\n"
+"Language-Team: actercompany.com <frank@actercompany.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Japanese\n"
-"X-Poedit-Country: JAPAN\n"
+"X-Poedit-Language: Chinese Traditional\n"
+"X-Poedit-Country: Taiwan\n"
 "X-Poedit-SourceCharset: utf-8\n"
 "X-Poedit-KeywordsList: __;_e\n"
-"X-Poedit-Basepath: C:\\www\\wordpress\\wp-content\\plugins\\revision-control\n"
+"X-Poedit-Basepath: ../\n"
 "X-Poedit-SearchPath-0: .\n"
 
 #: revision-control.php:38
 #: revision-control.php:151
 #: revision-control.php:294
 msgid "Revisions"
-msgstr "リビジョン"
+msgstr "修訂"
 
 #: revision-control.php:41
 #: revision-control.php:337
 msgid "Revision Control"
-msgstr "リビジョンコントロール"
+msgstr "版本控制"
 
 #: revision-control.php:142
 msgid "Post Revisions"
-msgstr "投稿リビジョン"
+msgstr "修改後"
 
 #: revision-control.php:153
 #: revision-control.php:347
 #: revision-control.php:368
 msgid "Enabled"
-msgstr "使用する"
+msgstr "使能夠"
 
 #: revision-control.php:154
 #: revision-control.php:157
 #: revision-control.php:165
 #, fuzzy
 msgid " (default)"
-msgstr "(削除)"
+msgstr "(刪除)"
 
 #: revision-control.php:156
 #: revision-control.php:350
@@ -55,38 +55,38 @@ msgstr "使用しない"
 #: revision-control.php:377
 #, fuzzy, php-format
 msgid "Limit to %d Revisions"
-msgstr "%d リビジョン"
+msgstr "%d 修訂"
 
 #: revision-control.php:262
 msgid "Are you sure you wish to delete this Revision?"
-msgstr "このリビジョンを削除しますか ?"
+msgstr "您是否確定刪除此修訂版本嗎？"
 
 #: revision-control.php:262
 msgid "(delete)"
-msgstr "(削除)"
+msgstr "(刪除)"
 
 #: revision-control.php:329
 msgid "Settings saved."
-msgstr "設定を保存しました。"
+msgstr "設置已保存。"
 
 #: revision-control.php:334
 msgid "<strong>Error:</strong> You have defined <code>WP_POST_REVISIONS</code> in your <code>wp-config.php</code> file, In order to use this plugin you will need to remove it."
-msgstr "<strong>エラー:</strong> <code>wp-config.php</code> ファイル内で <code>WP_POST_REVISIONS</code> が設定されています。このプラグインを利用するにはこの設定を削除してください。"
+msgstr "<strong>錯誤：</strong> 您所定義的 <code>WP_POST_REVISIONS</code> 在您的 <code>wp-config.php</code> 檔案，在以使用這個外掛程式，您需要將它移除。"
 
 #: revision-control.php:343
 msgid "Default Revision Status for Posts"
-msgstr "投稿のリビジョン設定"
+msgstr "默認情況下修訂狀態的職位"
 
 #: revision-control.php:364
 msgid "Default Revision Status for Pages"
-msgstr "ページのリビジョン設定"
+msgstr "默認情況下修訂地位的頁面"
 
 #: revision-control.php:385
 msgid "Save Changes"
-msgstr "変更を保存"
+msgstr "保存更改"
 
 #~ msgid "Revisions:"
-#~ msgstr "リビジョン:"
+#~ msgstr "修訂:"
 #~ msgid "Limit to"
-#~ msgstr "次のリビジョンまで保持:"
+#~ msgstr "限制"
 
