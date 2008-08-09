@@ -3,7 +3,7 @@ Contributors: dd32
 Tags: 2.6, revisions, post, admin
 Requires at least: 2.6
 Tested up to: 2.7-bleeding
-Stable tag: 1.6
+Stable tag: 1.7
 
 Revision Control allows finer control over the Post Revision system included with WordPress 2.6
 
@@ -32,6 +32,11 @@ The plugin also allows the deletion of specific revisions via the Revisions post
  * Thanks to Translators, Apologies to Translators for releasing 1.5 with changes before getting updated lang files
 = 1.6 =
  * oops, Forgot something from 1.5: If you set the page/posts's option to the *same* as the default, Then the per-page option is now forgotten.
+
+= 1.7 =
+ * Fix a bug with Firefox stealing the focus on the Revision limit drop-down, Thanks Viper007Bond
+ * Added HeBrew translation, Thanks Elad!
+ * No features added.
 
 == Screenshots ==
 
