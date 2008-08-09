@@ -157,7 +157,7 @@ function rc_revisions_meta_box( $post ) {
 		if ( RC_REVISION_DEFAULT === 0 ) echo '<strong>' . __(' (default)', 'revision-control') . '</strong>' ?></label> &nbsp;&nbsp;
 	<input name="revision-control" id="revision-control-number" type="radio" value="number" <?php
 		if ( WP_POST_REVISIONS > 1 ) echo ' checked="checked"' ?>/>
-	<label for="revision-control-number">
+	<label for="revision-control-number" onclick="return false;">
 	<select name="revision-control-number" onclick="jQuery('#revision-control-number').attr('checked', 'checked');">
 		<?php for ( $i = 2; $i < 15; $i++ ) : ?>
 		<option value="<?php echo $i ?>"<?php if ( WP_POST_REVISIONS === $i ) echo ' selected="selected"'
@@ -350,7 +350,7 @@ function rc_admin() {
 					<label for="revision-control-post-false"><?php _e('Disabled', 'revision-control') ?></label><br />
 				<input name="revision-control-post" id="revision-control-post-number" type="radio" value="number" <?php
 					if ( is_numeric( $defaults['post'] ) && $defaults['post'] > 1 ) echo ' checked="checked"' ?>/>
-					<label for="revision-control-post-number">
+					<label for="revision-control-post-number" onclick="return false;">
 						<select name="revision-control-post-number" onclick="jQuery('#revision-control-post-number').attr('checked', 'checked');">
 							<?php for ( $i = 2; $i < 15; $i++ ) : ?>
 							<option value="<?php echo $i ?>"<?php if ( WP_POST_REVISIONS === $i ) echo ' selected="selected"'
@@ -371,7 +371,7 @@ function rc_admin() {
 					<label for="revision-control-page-false"><?php _e('Disabled', 'revision-control') ?></label><br />
 				<input name="revision-control-page" id="revision-control-page-number" type="radio" value="number" <?php
 					if ( is_numeric( $defaults['page'] ) && $defaults['post'] > 1 ) echo ' checked="checked"' ?>/>
-					<label for="revision-control-page-number">
+					<label for="revision-control-page-number" onclick="return false;">
 						<select name="revision-control-page-number" onclick="jQuery('#revision-control-page-number').attr('checked', 'checked');">
 							<?php for ( $i = 2; $i < 15; $i++ ) : ?>
 							<option value="<?php echo $i ?>"<?php if ( WP_POST_REVISIONS === $i ) echo ' selected="selected"' ?>><?php printf( __('Limit to %d Revisions', 'revision-control'), $i) ?></option>
