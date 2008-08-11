@@ -38,6 +38,11 @@ The plugin also allows the deletion of specific revisions via the Revisions post
  * Added HeBrew translation, Thanks Elad!
  * No features added.
 
+= 1.8 =
+ * German Translation from Tux
+ * Czech Translation from Pavel
+ * No features added.
+
 == Screenshots ==
 
 1. The Global Settings
