@@ -41,6 +41,7 @@ The plugin also allows the deletion of specific revisions via the Revisions post
 = 1.8 =
  * German Translation from Tux
  * Czech Translation from Pavel
+ * Dutch Translation from Steven
  * No features added.
 
 == Screenshots ==
