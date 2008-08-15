@@ -1,4 +1,4 @@
-=== Revision Control ===
+﻿=== Revision Control ===
 Contributors: dd32
 Tags: 2.6, revisions, post, admin
 Requires at least: 2.6
@@ -42,6 +42,7 @@ The plugin also allows the deletion of specific revisions via the Revisions post
  * German Translation from Tux
  * Czech Translation from Pavel
  * Dutch Translation from Steven
+ * Russian Translation from Кактус
  * No features added.
 
 == Screenshots ==
