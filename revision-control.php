@@ -223,7 +223,7 @@ function rc_perpost_value($post_ID) {
 		$delete = count($revisions) - $number_to_delete;
 	
 		if ( $delete < 1 )
-			return $return;
+			return;
 
 		$revisions = array_slice( $revisions, 0, $delete );
 
@@ -250,7 +250,7 @@ function rc_list_post_revisions( $post_id = 0 ) {
 	foreach ( $revisions as $revision ) {
 		if ( !current_user_can( 'read_post', $revision->ID ) )
 			continue;
-		if ( 'revision' === $type && wp_is_post_autosave( $revision ) )
+		if ( 'revision' === $revision->post_type && wp_is_post_autosave( $revision ) )
 			continue;
 
 		$date = wp_post_revision_title( $revision );
