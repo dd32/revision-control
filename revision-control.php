@@ -353,7 +353,7 @@ function rc_admin() {
 					<label for="revision-control-post-number" onclick="return false;">
 						<select name="revision-control-post-number" onclick="jQuery('#revision-control-post-number').attr('checked', 'checked');">
 							<?php for ( $i = 2; $i < 15; $i++ ) : ?>
-							<option value="<?php echo $i ?>"<?php if ( WP_POST_REVISIONS === $i ) echo ' selected="selected"'
+							<option value="<?php echo $i ?>"<?php if ( $defaults['post'] === $i ) echo ' selected="selected"'
 								?>><?php printf( __('Limit to %d Revisions', 'revision-control'), $i) ?></option>
 							<?php endfor; ?>
 						</select>
@@ -374,7 +374,7 @@ function rc_admin() {
 					<label for="revision-control-page-number" onclick="return false;">
 						<select name="revision-control-page-number" onclick="jQuery('#revision-control-page-number').attr('checked', 'checked');">
 							<?php for ( $i = 2; $i < 15; $i++ ) : ?>
-							<option value="<?php echo $i ?>"<?php if ( WP_POST_REVISIONS === $i ) echo ' selected="selected"' ?>><?php printf( __('Limit to %d Revisions', 'revision-control'), $i) ?></option>
+							<option value="<?php echo $i ?>"<?php if ( $defaults['page'] === $i ) echo ' selected="selected"' ?>><?php printf( __('Limit to %d Revisions', 'revision-control'), $i) ?></option>
 							<?php endfor; ?>
 						</select>
 					</label>
