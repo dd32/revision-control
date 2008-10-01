@@ -47,6 +47,9 @@ The plugin also allows the deletion of specific revisions via the Revisions post
  * Bug fix: Limit revisions dropdown sticks to 2 revisions on admin panel.
  * No features added.
 
+= 1.9 =
+ * Spanish Translation from Alejandro 
+
 == Screenshots ==
 
 1. The Global Settings
