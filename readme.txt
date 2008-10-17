@@ -49,6 +49,7 @@ The plugin also allows the deletion of specific revisions via the Revisions post
 
 = 1.9 =
  * Spanish Translation from Alejandro 
+ * Turkish Translation from Semih
 
 == Screenshots ==
 
