@@ -3,7 +3,7 @@ Contributors: dd32
 Tags: 2.7, 2.6, revisions, post, admin
 Requires at least: 2.7
 Tested up to: 2.8
-Stable tag: 1.9
+Stable tag: 1.9.1
 
 Revision Control allows finer control over the Post Revision system included with WordPress 2.6
 
