@@ -4,7 +4,7 @@ Plugin Name: Revision Control
 Plugin URI: http://dd32.id.au/wordpress-plugins/revision-control/
 Description: Allows finer control over the number of Revisions stored on a global & per-post/page basis.
 Author: Dion Hulse
-Version: 1.8
+Version: 1.9
 */
 
 /**
@@ -23,6 +23,7 @@ function rc_loaded() {
 
 	//Ok, Time to add Admin related hooks :)
 	add_action('do_meta_boxes', 'rc_meta_box_manip', 15, 2);
+	add_action('admin_init', 'rc_admin_init');
 
 	//Now the Defines.
 	rc_define();
@@ -31,9 +32,9 @@ function rc_loaded() {
 /**
  * Add the Menu items. DOES NOT USE THE API; I'd like a bit better location than the end of the list.
  */
-add_action('admin_init', 'rc_admin_init');
 function rc_admin_init() {
 	global $submenu;
+
 	//Hack into the Menu ordering
 	$submenu['options-general.php'][17] = array(	__('Revisions', 'revision-control'),
 													'manage_options',
@@ -57,11 +58,8 @@ function rc_admin_init() {
  */
 function rc_define() {
 
-	$defaults = get_option('revision-control');
+	$defaults = get_option('revision-control', true);
 	if ( ! is_array($defaults) ) { //Upgrade from 1.0 to 1.1
-		if ( false === $defaults )
-			$defaults = true;
-
 		$defaults = array('post' => $defaults, 'page' => $defaults);
 		update_option('revision-control', $defaults);
 	}
@@ -85,8 +83,8 @@ function rc_define() {
 			//Eugh.. maybe_serialize() bug #7383 means integers/booleans are stored as string!
 			if ( is_string($revision_status) ) {
 				$revision_status = (int)$revision_status;
-				if ( (bool) $revision_status == $revision_status ) 
-					$revision_status = (bool)$revision_status;
+				if ( 1 == $revision_status )
+					$revision_status = true;
 			}
 		}
 	}
@@ -133,13 +131,18 @@ function rc_get_page_id() {
  */
 function rc_meta_box_manip($page, $context) {
 	global $wp_meta_boxes;
-	if ( 'advanced' != $context )
+	$type = version_compare($GLOBALS['wp_version'], '2.6.999', '>') ? 'normal' : 'advanced';
+
+	if ( 'dashboard' == $page )
 		return;
 
-	if ( isset($wp_meta_boxes[ $page ][ $context ][ 'core' ][ 'revisionsdiv' ]) )
-		$wp_meta_boxes[ $page ][ $context ][ 'core' ][ 'revisionsdiv' ]['callback'] = 'rc_revisions_meta_box';
+	if ( $type != $context )
+		return;
+
+	if ( isset($wp_meta_boxes[ $page ][ $type ][ 'core' ][ 'revisionsdiv' ]) )
+		$wp_meta_boxes[ $page ][ $type ][ 'core' ][ 'revisionsdiv' ]['callback'] = 'rc_revisions_meta_box';
 	else
-		add_meta_box('revisionsdiv', __('Post Revisions'), 'rc_revisions_meta_box', $page, $context, 'core');
+		add_meta_box('revisionsdiv', __('Post Revisions'), 'rc_revisions_meta_box', $page, $type, 'core');
 }
 
 /**
@@ -162,7 +165,7 @@ function rc_revisions_meta_box( $post ) {
 		<?php for ( $i = 2; $i < 15; $i++ ) : ?>
 		<option value="<?php echo $i ?>"<?php if ( WP_POST_REVISIONS === $i ) echo ' selected="selected"'
 			?>><?php printf( __('Limit to %d Revisions', 'revision-control'), $i);
-				if ( RC_REVISION_DEFAULT == $i ) _e(' (default)', 'revision-control'); ?></option>
+				if ( RC_REVISION_DEFAULT === $i ) _e(' (default)', 'revision-control'); ?></option>
 		<?php endfor; ?>
 	</select>
 	</label>
@@ -250,14 +253,13 @@ function rc_list_post_revisions( $post_id = 0 ) {
 	foreach ( $revisions as $revision ) {
 		if ( !current_user_can( 'read_post', $revision->ID ) )
 			continue;
-		if ( 'revision' === $revision->post_type && wp_is_post_autosave( $revision ) )
-			continue;
 
 		$date = wp_post_revision_title( $revision );
 		$name = get_author_name( $revision->post_author );
 
 		$title = sprintf( $titlef, $date, $name );
-		if ( current_user_can( 'edit_post', $revision->ID ) ) {
+
+		if ( current_user_can( 'edit_post', $revision->ID ) && ! wp_is_post_autosave( $revision ) ) {
 			$url = wp_nonce_url('admin-post.php?action=delete-revision&revision=' . $revision->ID, 'delete_revision-' . $revision->ID);
 			$title .= sprintf(' <a href="' . $url . '" onclick="return confirm(\'%s\')">%s</a>', js_escape(__('Are you sure you wish to delete this Revision?', 'revision-control')), __('(delete)', 'revision-control')); 
 		}
@@ -388,5 +390,36 @@ function rc_admin() {
 	</div>
 	<?php
 }
+
+class revision_control {
+	//Stub until 2.0 is finalised.
+	var $dd32_requires = 3;
+	var $basename = '';
+	var $folder = '';
+	var $version = '1.9';
+	
+	function revision_control() {
+		//Set the directory of the plugin:
+		$this->basename = plugin_basename(__FILE__);
+		$this->folder = dirname($this->basename);
+
+		//Set the version of the DD32 library this plugin requires.
+		$GLOBALS['dd32_version'] = isset($GLOBALS['dd32_version']) ? max($GLOBALS['dd32_version'], $this->dd32_requires) : $this->dd32_requires;
+		add_action('init', array(&$this, 'load_dd32'), 20);
+
+		//Register general hooks.
+		add_action('admin_init', array(&$this, 'admin_init'));
+	}
+	
+	function load_dd32() {
+		//Load common library
+		include 'inc/class.dd32.php';
+	}
+	
+	function admin_init() {
+		DD32::add_changelog($this->basename, 'http://svn.wp-plugins.org/revision-control/trunk/readme.txt');
+	}
+}
+add_action('init', create_function('', '$GLOBALS["revision-control"] = new revision_control();'), 5);
 
 ?>

@@ -1,9 +1,9 @@
 ﻿=== Revision Control ===
 Contributors: dd32
-Tags: 2.6, revisions, post, admin
-Requires at least: 2.6
-Tested up to: 2.7-bleeding
-Stable tag: 1.8
+Tags: 2.7, 2.6, revisions, post, admin
+Requires at least: 2.7
+Tested up to: 2.8
+Stable tag: 1.9
 
 Revision Control allows finer control over the Post Revision system included with WordPress 2.6
 
@@ -20,6 +20,7 @@ The plugin also allows the deletion of specific revisions via the Revisions post
 
 = 1.0 =
  * Initial Release
+
 = 1.1, 1.2, 1.3 =
  * Italian & Japanese Translations
  * Allows Deletion of a Single revision via the Revisions post box
@@ -30,6 +31,7 @@ The plugin also allows the deletion of specific revisions via the Revisions post
  * Skipped 1.4
  * Sticking option values should finally be fixed.
  * Thanks to Translators, Apologies to Translators for releasing 1.5 with changes before getting updated lang files
+
 = 1.6 =
  * oops, Forgot something from 1.5: If you set the page/posts's option to the *same* as the default, Then the per-page option is now forgotten.
 
@@ -51,6 +53,9 @@ The plugin also allows the deletion of specific revisions via the Revisions post
  * Spanish Translation from Alejandro 
  * Turkish Translation from Semih
  * Latvian Translation from Rolands
+ * Fix 'Disabled' per-object checkbox
+ * Introduce DD32's common data class, Adds Update version changelog functionality
+ * WP 2.7 compatibility, This is mainly a maintanence release until version 2.0 is fully finalised.
 
 == Screenshots ==
 
