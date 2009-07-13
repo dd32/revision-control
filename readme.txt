@@ -2,8 +2,8 @@
 Contributors: dd32
 Tags: 2.7, 2.6, revisions, post, admin
 Requires at least: 2.7
-Tested up to: 2.8
-Stable tag: 1.9.1
+Tested up to: 2.8.1
+Stable tag: 1.9.2
 
 Revision Control allows finer control over the Post Revision system included with WordPress 2.6
 
@@ -56,6 +56,17 @@ The plugin also allows the deletion of specific revisions via the Revisions post
  * Fix 'Disabled' per-object checkbox
  * Introduce DD32's common data class, Adds Update version changelog functionality
  * WP 2.7 compatibility, This is mainly a maintanence release until version 2.0 is fully finalised.
+
+= 1.9.1 =
+ * Small bugfixes
+
+= 1.9.2
+ * WordPress 2.8.1 compatibility
+
+= 2.0 =
+ * Rewrite from scratch utilising 2.7 only functionality
+ * Swedish Translation from Linus
+ * Estonian Translation from "Lembit Kivisik" <lembit@designux.com>
 
 == Screenshots ==
 
