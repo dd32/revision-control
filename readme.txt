@@ -3,7 +3,7 @@ Contributors: dd32
 Tags: 2.7, 2.6, revisions, post, admin
 Requires at least: 2.7
 Tested up to: 2.8.1
-Stable tag: 1.9.5
+Stable tag: 1.9.7
 
 Revision Control allows finer control over the Post Revision system included with WordPress 2.6
 
@@ -60,15 +60,9 @@ The plugin also allows the deletion of specific revisions via the Revisions post
 = 1.9.1 =
  * Small bugfixes
 
-
-= 1.9.2 =
- * WordPress 2.8.1 compatibility
-
-= 1.9.3 =
- * Ok, So last .2 didnt work.
-
-=  1.9.5 =
- * Re-release of .3... since it doesnt seem to have propergated throughout wordpress.org
+= 1.9.7 =
+ * 1.9.2, 1.9.3, 1.9.5 all seem screwy, Something was wrong with my SVN client, it was commiting from a previous revision and not my current revision... 
+ * 2.8.1 compatibility
 
 = 2.0 =
  * Rewrite from scratch utilising 2.7 only functionality
