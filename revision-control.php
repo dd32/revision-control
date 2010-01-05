@@ -2,424 +2,664 @@
 /*
 Plugin Name: Revision Control
 Plugin URI: http://dd32.id.au/wordpress-plugins/revision-control/
-Description: Allows finer control over the number of Revisions stored on a global & per-post/page basis.
+Description: Allows finer control over the number of Revisions stored on a global & per-type/page basis.
 Author: Dion Hulse
-Version: 1.9
+Version: 2.0-alpha
 */
 
-/**
- * This function defines WP_POST_REVISIONS for the current post.
- * Note: The define is auto-defined to true shortly after this hook is run.
- */
-add_action('plugins_loaded', 'rc_loaded');
-function rc_loaded() {
-	if ( defined('WP_POST_REVISIONS') && defined('WP_ADMIN') ) {
-		define('RC_DEFINED_BAD', true); //Lets notify the user about this on the Revision control menu item.
-		return;
-	}
+//add_action('all', create_function('', 'var_dump(current_filter());'));
 
-	if ( ! defined('WP_ADMIN') || ! WP_ADMIN )
-		return;
-
-	//Ok, Time to add Admin related hooks :)
-	add_action('do_meta_boxes', 'rc_meta_box_manip', 15, 2);
-	add_action('admin_init', 'rc_admin_init');
-
-	//Now the Defines.
-	rc_define();
-}
-
-/**
- * Add the Menu items. DOES NOT USE THE API; I'd like a bit better location than the end of the list.
- */
-function rc_admin_init() {
-	global $submenu;
-
-	//Hack into the Menu ordering
-	$submenu['options-general.php'][17] = array(	__('Revisions', 'revision-control'),
-													'manage_options',
-													'revision-control',
-													__('Revision Control', 'revision-control')
-												);
-	ksort($submenu['options-general.php']); //Put it back in order
-
-	//Add a menu callback
-	add_action( get_plugin_page_hookname( 'revision-control', 'options-general.php'), 'rc_admin' );
-
-	//Load any translations.
-	load_plugin_textdomain(	'revision-control', 
-							PLUGINDIR . '/' . dirname(plugin_basename(__FILE__)) . '/langs/', //2.5 Compatibility
-							dirname(plugin_basename(__FILE__)) . '/langs/'); //2.6+, Works with custom wp-content dirs.
-}
-
-/**
- * Defined WP_POST_REVISIONS for the current post/page/etc
- * Looks for Post ID's in the post and post_ID fields.
- */
-function rc_define() {
-
-	$defaults = get_option('revision-control', true);
-	if ( ! is_array($defaults) ) { //Upgrade from 1.0 to 1.1
-		$defaults = array('post' => $defaults, 'page' => $defaults);
-		update_option('revision-control', $defaults);
-	}
-
-	$current_post = rc_get_page_id();
-
-	//Post or Page:
-	if ( ! $type = rc_get_page_type($current_post) )
-		return;
-	
-	$revision_status = isset($defaults[ $type ]) ? $defaults[ $type ] : true;
-	
-	define('RC_REVISION_DEFAULT', $revision_status);
-
-	if ( $current_post ) {
-		//Handle per-post/page settings.
-		$post_revision_status = get_post_meta($current_post, '_revision-control', true);
-		if ('' !== trim($post_revision_status) ) {
-			$revision_status = $post_revision_status;
-	
-			//Eugh.. maybe_serialize() bug #7383 means integers/booleans are stored as string!
-			if ( is_string($revision_status) ) {
-				$revision_status = (int)$revision_status;
-				if ( 1 == $revision_status )
-					$revision_status = true;
-			}
-		}
-	}
-
-	@define('WP_POST_REVISIONS', $revision_status);
-}
-
-/**
- * Determines if this is a Page or a Post, Or other.
- */
-function rc_get_page_type( $id = 0 ) {
-	global $pagenow;
-
-	if ( isset($_POST['post_type']) )
-		return $_POST['post_type'];
-	else if ( 'page.php' == $pagenow || 'page-new.php' == $pagenow)
-		return 'page';
-	else if ( 'post.php' == $pagenow || 'post-new.php' == $pagenow)
-		return 'post';
-	else if ( $id && $post = get_post($id) )
-		return $post->post_type;
-
-	return false;
-}
-
-/**
- * Determines the post/page's ID based on the 'post' and 'post_ID' POST/GET fields.
- */
-function rc_get_page_id() {
-	foreach ( array( 'post_ID', 'post' ) as $field )
-		if ( isset( $_REQUEST[ $field ] ) )
-			return absint($_REQUEST[ $field ]);
-
-	if ( isset($_REQUEST['revision']) )
-		if ( $post = get_post( $id = absint($_REQUEST['revision']) ) )
-			return absint($post->post_parent);
-
-	return false;
-}
-
-/**
- * Custom Revisions box
- * Should use the API, But remove_meta_box followed by add_meta_box doesnt appear to add the new box
- */
-function rc_meta_box_manip($page, $context) {
-	global $wp_meta_boxes;
-	$type = version_compare($GLOBALS['wp_version'], '2.6.999', '>') ? 'normal' : 'advanced';
-
-	if ( 'dashboard' == $page )
-		return;
-
-	if ( $type != $context )
-		return;
-
-	if ( isset($wp_meta_boxes[ $page ][ $type ][ 'core' ][ 'revisionsdiv' ]) )
-		$wp_meta_boxes[ $page ][ $type ][ 'core' ][ 'revisionsdiv' ]['callback'] = 'rc_revisions_meta_box';
-	else
-		add_meta_box('revisionsdiv', __('Post Revisions'), 'rc_revisions_meta_box', $page, $type, 'core');
-}
-
-/**
- * The new Revision Meta box
- */
-function rc_revisions_meta_box( $post ) {
-	rc_list_post_revisions();
-	?>
-	<strong><?php _e('Revisions', 'revision-control') ?>:</strong>
-	<input name="revision-control" id="revision-control-true" type="radio" value="true" <?php
-		if ( WP_POST_REVISIONS === true ) echo ' checked="checked"' ?> /><label for="revision-control-true"><?php _e('Enabled', 'revision-control');
-		if ( RC_REVISION_DEFAULT === true ) echo '<strong>' . __(' (default)', 'revision-control') . '</strong>' ?></label>&nbsp;&nbsp;
-	<input name="revision-control" id="revision-control-false" type="radio" value="false" <?php
-		if ( WP_POST_REVISIONS === 0 ) echo ' checked="checked"' ?>/><label for="revision-control-false"><?php _e('Disabled', 'revision-control');
-		if ( RC_REVISION_DEFAULT === 0 ) echo '<strong>' . __(' (default)', 'revision-control') . '</strong>' ?></label> &nbsp;&nbsp;
-	<input name="revision-control" id="revision-control-number" type="radio" value="number" <?php
-		if ( WP_POST_REVISIONS > 1 ) echo ' checked="checked"' ?>/>
-	<label for="revision-control-number" onclick="return false;">
-	<select name="revision-control-number" onclick="jQuery('#revision-control-number').attr('checked', 'checked');">
-		<?php for ( $i = 2; $i < 15; $i++ ) : ?>
-		<option value="<?php echo $i ?>"<?php if ( WP_POST_REVISIONS === $i ) echo ' selected="selected"'
-			?>><?php printf( __('Limit to %d Revisions', 'revision-control'), $i);
-				if ( RC_REVISION_DEFAULT === $i ) _e(' (default)', 'revision-control'); ?></option>
-		<?php endfor; ?>
-	</select>
-	</label>
-	<?php
-}
-
-/**
- * Sets the per-post revision status. Also deletes any now-stale revisions.
- */
-add_action('save_post', 'rc_perpost_value');
-function rc_perpost_value($post_ID) {
-	if ( ! isset($_POST['revision-control']) )
-		return;
-	if ( 'number' == $_POST['revision-control'] && ! isset($_POST['revision-control-number']) )
-		return;
-
-	switch ( $_POST['revision-control'] ) {
-		case 'true':
-			if ( RC_REVISION_DEFAULT === true ) {
-				if ('' !== get_post_meta($post_ID, '_revision-control') )
-					delete_post_meta($post_ID, '_revision-control');
-				return;
-			}
-
-			update_post_meta($post_ID, '_revision-control', true);
-			$number_to_delete = false;
-			break;
-		case 'false':
-			if ( RC_REVISION_DEFAULT === 0 ) {
-				if ('' !== get_post_meta($post_ID, '_revision-control') )
-					delete_post_meta($post_ID, '_revision-control');
-				return;
-			}
-
-			update_post_meta($post_ID, '_revision-control', 0);
-			$number_to_delete = 0;
-			break;
-		case 'number':
-			$number_to_delete = (int)$_POST['revision-control-number'];
-			if ( RC_REVISION_DEFAULT === $number_to_delete ) {
-				if ('' !== get_post_meta($post_ID, '_revision-control') )
-					delete_post_meta($post_ID, '_revision-control');
-				return;
-			}
-
-			update_post_meta($post_ID, '_revision-control', $number_to_delete);
-			break;
-		default:
-			//Abort! Abort!
-			return;
-	}
-
-	if ( is_integer($number_to_delete) ) {
-		// all revisions and (possibly) one autosave
-		$revisions = wp_get_post_revisions( $post_ID, array( 'order' => 'ASC' ) );
-
-		//Number to delete, based on option.
-		$delete = count($revisions) - $number_to_delete;
-	
-		if ( $delete < 1 )
-			return;
-
-		$revisions = array_slice( $revisions, 0, $delete );
-
-		foreach ( (array)$revisions as $revision )
-			if ( false === strpos( $revision->post_name, 'autosave' ) )
-				wp_delete_post_revision( $revision->ID );
-	}
-}
-
-/**
- * Copy of wp_list_post_revisions() w/ non-list support stripped out.
- * 
- */
-function rc_list_post_revisions( $post_id = 0 ) {
-	if ( !$post = get_post( $post_id ) )
-		return;
-
-	if ( !$revisions = wp_get_post_revisions( $post->ID ) )
-		return;
-
-	$titlef = _c( '%1$s by %2$s|post revision 1:datetime, 2:name' );
-
-	echo "<ul class='post-revisions'>\n";
-	foreach ( $revisions as $revision ) {
-		if ( !current_user_can( 'read_post', $revision->ID ) )
-			continue;
-
-		$date = wp_post_revision_title( $revision );
-		$name = get_author_name( $revision->post_author );
-
-		$title = sprintf( $titlef, $date, $name );
-
-		if ( current_user_can( 'edit_post', $revision->ID ) && ! wp_is_post_autosave( $revision ) ) {
-			$url = wp_nonce_url('admin-post.php?action=delete-revision&revision=' . $revision->ID, 'delete_revision-' . $revision->ID);
-			$title .= sprintf(' <a href="' . $url . '" onclick="return confirm(\'%s\')">%s</a>', js_escape(__('Are you sure you wish to delete this Revision?', 'revision-control')), __('(delete)', 'revision-control')); 
-		}
-		echo "\t<li>$title</li>\n";
-	}
-	echo "</ul>";
-
-}
-
-/**
- * Deletes a Revision
- */
-add_action('admin_post_delete-revision', 'rc_delete_revision');
-function rc_delete_revision() {
-	$revision = absint($_REQUEST['revision']);
-	if ( $revision ) {
-		check_admin_referer('delete_revision-' . $revision);
-		if ( current_user_can('delete_post', $revision) )
-			wp_delete_post_revision( $revision );
-	}
-	wp_safe_redirect(wp_get_referer());
-}
-
-/**
- * Add the Plugin action link.
- */
-add_filter('plugin_action_links', 'rc_plugins_filter', 10, 2);
-function rc_plugins_filter($links, $plugin) {
-	static $this_plugin;
-	if( ! $this_plugin )
-		$this_plugin = plugin_basename(__FILE__);
-
-	if( $plugin == $this_plugin ) {
-		$links = array_merge( array('<a href="options-general.php?page=revision-control">' . __('Revisions', 'revision-control') . '</a>'), $links);
-		remove_filter('plugin_action_links', 'rc_plugins_filter'); //Nice citizens, We dont *really* need to check anymore.
-	}
-
-	return $links;
-}
-
-/**
- * The admin page, Handles saving the setting too.
- * checked() / selected() cannot save us, need a === instead of ==
- */
-function rc_admin() {
-	$defaults = get_option('revision-control');
-	
-	if ( 'POST' == strtoupper($_SERVER['REQUEST_METHOD']) ) {
-		check_admin_referer('update-options');
-		
-		foreach ( array('post', 'page') as $field ) {
-			if ( ! isset($_POST['revision-control-' . $field]) )
-				continue;
-
-			switch ( $_POST['revision-control-' . $field] ) {
-				case 'true':
-					$defaults[ $field ] = true;
-					break;
-				case 'false':
-					$defaults[ $field ] = 0;
-					break;
-				case 'number':
-					$defaults[ $field ] = (int)$_POST['revision-control-' . $field . '-number'];
-					break;
-			}
-		}
-		if ( $defaults !== get_option('revision-control') ) {
-			update_option('revision-control', $defaults);
-			echo '<div id="message" class="updated fade"><p><strong>' . __('Settings saved.', 'revision-control') . '</strong></p></div>';
-		}
-	}
-	?>
-	<?php if ( defined('RC_DEFINED_BAD') ) : ?>
-		<div class="message error"><p><?php _e('<strong>Error:</strong> You have defined <code>WP_POST_REVISIONS</code> in your <code>wp-config.php</code> file, In order to use this plugin you will need to remove it.', 'revision-control') ?></p></div>
-	<?php endif; ?>
-	<div class="wrap">
-	<h2><?php _e('Revision Control', 'revision-control') ?></h2>
-	<form method="post" action="options-general.php?page=revision-control">
-	<?php wp_nonce_field('update-options') ?>
-	
-	<table class="form-table">
-		<tr valign="top">
-			<th scope="row"><label for="revision-control-post"> <?php _e('Default Revision Status for Posts', 'revision-control') ?></label></th>
-			<td>
-				<input name="revision-control-post" id="revision-control-post-true" type="radio" value="true" <?php
-					if ( $defaults['post'] === true || $defaults['post'] === false ) echo ' checked="checked"' ?> />
-					<label for="revision-control-post-true"><?php _e('Enabled', 'revision-control') ?></label><br />
-				<input name="revision-control-post" id="revision-control-post-false" type="radio" value="false" <?php
-					if ( $defaults['post'] === 0 ) echo ' checked="checked"' ?>/>
-					<label for="revision-control-post-false"><?php _e('Disabled', 'revision-control') ?></label><br />
-				<input name="revision-control-post" id="revision-control-post-number" type="radio" value="number" <?php
-					if ( is_numeric( $defaults['post'] ) && $defaults['post'] > 1 ) echo ' checked="checked"' ?>/>
-					<label for="revision-control-post-number" onclick="return false;">
-						<select name="revision-control-post-number" onclick="jQuery('#revision-control-post-number').attr('checked', 'checked');">
-							<?php for ( $i = 2; $i < 15; $i++ ) : ?>
-							<option value="<?php echo $i ?>"<?php if ( $defaults['post'] === $i ) echo ' selected="selected"'
-								?>><?php printf( __('Limit to %d Revisions', 'revision-control'), $i) ?></option>
-							<?php endfor; ?>
-						</select>
-					</label>
-			</td>
-		</tr>
-		<tr valign="top">
-			<th scope="row"><label for="revision-control-page"> <?php _e('Default Revision Status for Pages', 'revision-control') ?></label></th>
-			<td>
-				<input name="revision-control-page" id="revision-control-page-true" type="radio" value="true" <?php
-					if ( $defaults['page'] === true || $defaults['page'] === false ) echo ' checked="checked"' ?> />
-					<label for="revision-control-page-true"><?php _e('Enabled', 'revision-control') ?></label><br />
-				<input name="revision-control-page" id="revision-control-page-false" type="radio" value="false" <?php
-					if ( $defaults['page'] === 0 ) echo ' checked="checked"' ?>/>
-					<label for="revision-control-page-false"><?php _e('Disabled', 'revision-control') ?></label><br />
-				<input name="revision-control-page" id="revision-control-page-number" type="radio" value="number" <?php
-					if ( is_numeric( $defaults['page'] ) && $defaults['post'] > 1 ) echo ' checked="checked"' ?>/>
-					<label for="revision-control-page-number" onclick="return false;">
-						<select name="revision-control-page-number" onclick="jQuery('#revision-control-page-number').attr('checked', 'checked');">
-							<?php for ( $i = 2; $i < 15; $i++ ) : ?>
-							<option value="<?php echo $i ?>"<?php if ( $defaults['page'] === $i ) echo ' selected="selected"' ?>><?php printf( __('Limit to %d Revisions', 'revision-control'), $i) ?></option>
-							<?php endfor; ?>
-						</select>
-					</label>
-			</td>
-		</tr>
-	</table>
-	<p class="submit">
-		<input type="submit" name="Submit" value="<?php _e('Save Changes', 'revision-control') ?>" />
-	</p>
-	</form>
-	</div>
-	<?php
-}
-
-class revision_control {
-	//Stub until 2.0 is finalised.
-	var $dd32_requires = 3;
+$GLOBALS['revision_control'] = new Plugin_Revision_Control();
+class Plugin_Revision_Control {
 	var $basename = '';
 	var $folder = '';
-	var $version = '1.9';
+	var $version = '2.0-alpha';
 	
-	function revision_control() {
+	var $define_failure = false;
+	var $options = array( 'per-type' => array('post' => 'unlimited', 'page' => 'unlimited', 'all' => 'unlimited'), 'revision-range' => '1..5,10,20,50,100' );
+
+	function Plugin_Revision_Control() {
 		//Set the directory of the plugin:
 		$this->basename = plugin_basename(__FILE__);
 		$this->folder = dirname($this->basename);
 
-		//Set the version of the DD32 library this plugin requires.
-		$GLOBALS['dd32_version'] = isset($GLOBALS['dd32_version']) ? max($GLOBALS['dd32_version'], $this->dd32_requires) : $this->dd32_requires;
-		add_action('init', array(&$this, 'load_dd32'), 20);
-
 		//Register general hooks.
 		add_action('admin_init', array(&$this, 'admin_init'));
-	}
-	
-	function load_dd32() {
-		//Load common library
-		include 'inc/class.dd32.php';
+		add_action('admin_menu', array(&$this, 'admin_menu'));
+		add_action('plugins_loaded', array(&$this, 'define_WP_POST_REVISIONS'));
 	}
 	
 	function admin_init() {
-		DD32::add_changelog($this->basename, 'http://svn.wp-plugins.org/revision-control/trunk/readme.txt');
+		// Load options
+		$this->load_options();
+		
+		// Register post/page hook:
+		foreach ( array('load-post-new.php', 'load-post.php', 'load-page-new.php', 'load-page.php') as $page )
+			add_action($page, array(&$this, 'meta_box'));
+
+		wp_register_script('revision-control', plugins_url( $this->folder . '/revision-control.js' ), array('jquery'), $this->version . time());
+		wp_register_style ('revision-control', plugins_url( $this->folder . '/revision-control.css' ), array(), $this->version . time());
+		
+		// Add post handlers.
+		add_action('admin_post_revision-control-delete', array('Plugin_Revision_Control_Ajax', 'delete_revisions'));
+		add_action('admin_post_revision-control-options', array('Plugin_Revision_Control_Ajax', 'save_options'));
+		add_action('admin_post_revision-control-revision-compare', array('Plugin_Revision_Control_UI', 'compare_revisions_iframe'));
+		
+		add_action('save_post', array(&$this, 'save_post'));
+		
+		
+		// Version the terms.
+		add_action('_wp_put_post_revision', array(&$this, 'version_terms') );
+		
+		//Load any translations.
+		load_plugin_textdomain(	'revision-control', false, dirname(plugin_basename(__FILE__)) . '/langs/');
+	}
+	
+	function admin_menu() {
+		add_options_page( __('Revision Control', 'revision-control'), __('Revisions', 'revision-control'), 'manage_options', 'revision-control', array('Plugin_Revision_Control_UI', 'admin_page'));
+	}
+	
+	function meta_box() {
+		remove_meta_box('revisionsdiv', 'post', 'normal');
+		remove_meta_box('revisionsdiv', 'page', 'normal');
+		add_meta_box('revisionsdiv', __('Post Revisions'), array('Plugin_Revision_Control_UI', 'revisions_meta_box'), 'post', 'normal');
+		add_meta_box('revisionsdiv', __('Post Revisions'), array('Plugin_Revision_Control_UI', 'revisions_meta_box'), 'page', 'normal');
+		
+		//enqueue that Stylin' script!
+		wp_enqueue_script('revision-control');
+		wp_enqueue_style('revision-control');
+
+		add_thickbox();
+		
+	}
+	
+	function save_post($id) {
+		$new = isset($_POST['limit_revisions']) ? stripslashes_deep($_POST['limit_revisions']) : false;
+		$old = isset($_POST['limit_revisions_before']) ? stripslashes_deep($_POST['limit_revisions_before']) : false;
+		
+		if ( false === $new || false === $old )
+			return;
+		if ( $new == $old )
+			return;
+		
+		update_metadata('post', $id, '_revision-control', $new, $old);
+		
+		// This post now needs to have its revisions updated.
+		$this->update_revisions($id);
+		
+		/*echo '<pre>';
+		var_dump($new, $old);
+		wp_redirect('');
+		die();*/
+	}
+	
+	function update_revisions() {} //This function needs to cleanup old revisions.
+	
+	function define_WP_POST_REVISIONS() {
+		// Iterate various request vars to see if a post is set.
+		if ( defined('WP_POST_REVISIONS') ) {
+			$this->define_failure = true; // This.. Is defineing failure.. as true!
+			return;
+		}
+		
+		$current_post = $this->get_current_post();
+		if ( !empty($_REQUEST['limit_revisions']) ) { //Handle it when updating a post.
+			if ( ! $default = $this->option($current_post->post_type, 'per-type') )
+				$default = $this->option('all', 'per-type');
+			$post_specific = $_REQUEST['limit_revisions'];
+		} else if ( $current_post ) {
+			// Good, we've got a post so can base it off the post_type
+			if ( ! $default = $this->option($current_post->post_type, 'per-type') )
+				$default = $this->option('all', 'per-type');
+			// Check to see if those post has a custom Revisions value:
+			$post_specific = get_metadata('post', $current_post->ID, '_revision-control', true);
+			if ( '' == $post_specific )
+				$post_specific = false;
+			else if ( ! is_array($post_specific) )
+				$post_specific = Plugin_Revision_Control_Compat::postmeta($post_specific, $current_post);
+			
+		} else {
+			// Guess based on the current page.
+			global $pagenow;
+			if ( !empty($_REQUEST['post_type']) )
+				$post_type = stripslashes($_REQUEST['post_type']);
+			else if ( 'page.php' == $pagenow || 'page-new.php' == $pagenow)
+				$post_type = 'page';
+			else if ( 'post.php' == $pagenow || 'post-new.php' == $pagenow)
+				$post_type = 'post';
+			else
+				$post_type = '';
+
+			if ( empty($post_type) )
+				return; //Not needed.
+
+			if ( ! $default = $this->option($post_type, 'per-type') )
+				$default = $this->option('all', 'per-type');
+
+		}
+		
+		// Ok, Lets define it.
+		$define_to = '' != $post_specific[0] ? $post_specific[0] : $default;
+		switch ( $define_to ) {
+			case 'unlimited':
+				define('WP_POST_REVISIONS', true);
+				break;
+			case 'never':
+				define('WP_POST_REVISIONS', 0);
+				break;
+			case 'defaults':
+				define('WP_POST_REVISIONS', $default);
+				break;
+			default:
+				if ( is_numeric($define_to) )
+					define('WP_POST_REVISIONS', (int)$define_to);
+				else
+					define('WP_POST_REVISIONS', true); // All else fails, Its this.
+				break;
+		}
+	}
+	
+
+	function get_current_post() {
+		foreach ( array( 'post_id', 'post_ID', 'post' ) as $field )
+			if ( isset( $_REQUEST[ $field ] ) )
+				return get_post(absint($_REQUEST[ $field ]));
+
+		if ( isset($_REQUEST['revision']) )
+			if ( $post = get_post( $id = absint($_REQUEST['revision']) ) )
+				return get_post(absint($post->post_parent));
+
+		return false;
+	}
+	
+	function version_terms($revision_id) {
+		// Attach all the terms from the parent to the revision.
+		if ( ! $rev = get_post($revision_id) )
+			return;
+		if ( ! $post = get_post($rev->post_parent) )
+			return;
+
+		// Only worry about taxonomies which are specifically linked.
+		foreach ( get_object_taxonomies($post->post_type) as $taxonomy ) {
+			$_terms = wp_get_object_terms($post->ID, $taxonomy);
+			$terms = array();
+			foreach ( $_terms as $t )
+				$terms[] = (int)$t->term_id;
+			if ( ! empty($terms) )
+				wp_set_object_terms($revision_id, $terms, $taxonomy);
+		}
+	}
+	
+	function version_postmeta() {} // ?
+	
+	function sort_revisions_by_time($a, $b) {
+		return strtotime($a->post_modified_gmt) < strtotime($b->post_modified_gmt);
+	}
+	
+	function load_options() {
+		$original = $options = get_option('revision-control', array());
+		$options = Plugin_Revision_Control_Compat::options($options); // Lets upgrade the options..
+		if ( $options != $original ) // Update it if an upgrade has taken place.
+			update_option('revision-control', $options);
+
+		$this->options = array_merge($this->options, $options); // Some default options may be set here, unless the user modifies them
+	}
+	
+	function option($key, $bucket = false, $default = false ) {
+		if ( $bucket )
+			return isset($this->options[$bucket][$key]) ? $this->options[$bucket][$key] : $default;			
+		else
+			return isset($this->options[$key]) ? $this->options[$key] : $default;
+	}
+
+	function set_option($key, $value, $bucket = false) { 
+		if ( $bucket )
+			$this->options[$bucket][$key] = $value;
+		else
+			$this->options[$key] = $value;
+		update_option('revision-control', $this->options);
+	}
+
+	function get_revision_limit_select_items($current = false) { 
+		$items = array(
+						'defaults' => __('Default Revision Settings', 'revision-control'),
+						'unlimited' => __('Unlimited number of revisions', 'revision-control'),
+						'never' => __('Do not store revisions', 'revision-control')
+					   );
+		$values = $this->option('revision-range', '');
+		$values = explode(',', $values);
+		foreach ( $values as $val ) {
+			$val = trim($val);
+			if ( preg_match('|^(\d+)\.\.(\d+)$|', $val, $matches) ) {
+				foreach ( range( (int)$matches[1], (int)$matches[2]) as $num )
+					$items[ $num ] = sprintf( _nx( 'Maximum %d Revision stored', 'Maximum %d Revisions stored', $num, 'revision-control' ), $num );
+			} else if ( is_numeric($val) ) {
+				$num = (int)$val;
+				$items[ $num ] = sprintf( _nx( 'Maximum %d Revision stored', 'Maximum %d Revisions stored', $num, 'revision-control' ), $num );
+			}
+		}
+
+		if ( false != $current && is_numeric($current) && !isset($items[ $current ]) ) // Support for when the range changes and the global/per-post has changed since.
+			$items[ $current ] = sprintf( _nx( 'Maximum %d Revision stored', 'Maximum %d Revisions stored', $current, 'revision-control' ), $current );
+
+		return $items;
+	}
+
+}
+
+class Plugin_Revision_Control_Compat {
+	function postmeta($meta, $post) {
+		if ( is_array($meta) )
+			return $meta;
+		if ( ! is_numeric($meta) )
+			return false;
+
+		$_meta = array( (int) $meta );
+		if ( 1 === $_meta[0] )
+			$_meta[0] = 'unlimited';
+		else if ( 0 === $meta[0] )
+			$_meta[0] = 'never';
+
+		if ( $_meta != $meta )
+			update_metadata('post', $post->ID, '_revision-control', $_meta, $meta);
+		
+		return $_meta;
+	}
+
+	function options($options) {
+		$_options = $options;
+		if ( ! is_array($options) ) { // Upgrade from 1.0 to 1.1
+			$options = array( 'post' => $options, 'page' => $options );
+		}
+		if ( isset($options['post']) ) { // Upgrade from 1.1 to 2.0
+			$options['per-type'] = array( 'post' => $options['post'], 'page' => $options['page'] );
+			unset($options['post'], $options['page']);
+			
+			// The fun part, Move from (bool) & (int) to (string) and (int). Easier to seperate with is_numeric that way.
+			foreach ( $options['per-type'] as $type => $value ) {
+				if ( true === $value )
+					$options['per-type'][$type] = 'unlimited';
+				elseif ( 0 === $value )
+					$options['per-type'][$type] = 'never';
+				elseif ( is_numeric($value) && (int)$value > 0 )
+					$options['per-type'][$type] = (int)$options['per-type'][$type];
+				else
+					$options['per-type'][$type] = 'unlimited';
+			}
+		}
+		return $options;
 	}
 }
-add_action('init', create_function('', '$GLOBALS["revision-control"] = new revision_control();'), 5);
 
-?>
+class Plugin_Revision_Control_Ajax {
+	function delete_revisions() {
+		//Add nonce check
+		//check_admin_referer('revision-control-ajax');
+		
+		if ( empty($_POST['revisions']) ) {
+			$x = new WP_AJAX_Response();
+			$x->add( array('data' => -1) );
+			$x->send();
+			return;
+		}
+		
+		$revisions = stripslashes($_POST['revisions']);
+		$revisions = explode(',', $revisions);
+		$revisions = array_map('intval', $revisions);
+
+		foreach ( $revisions as $revision_id )
+			wp_delete_post_revision($revision_id);
+
+		$x = new WP_AJAX_Response();
+		$x->add( array('data' => 1, 'supplemental' => array('revisions' => implode(',', $revisions)) ) );
+		$x->send();
+	}
+	function save_options() {
+		global $revision_control;
+		check_Admin_referer('revision-control-options');
+
+		$data = stripslashes_deep($_POST['options']);
+		foreach ( $data as $option => $val ) {
+			if ( is_string($val) ) // Option is the keyname
+				 $revision_control->set_option($option, $val);
+			elseif ( is_array($val) ) // Option is the bucket, key => val are the options in the group.
+				foreach ( $val as $subkey => $subval ) 
+					 $revision_control->set_option($subkey, $subval, $option);
+		}
+		wp_safe_redirect( add_query_arg('updated', 'true', wp_get_referer() ) );
+	}
+}
+
+class Plugin_Revision_Control_UI {
+	function compare_revisions_iframe() {
+		
+		if ( function_exists('register_admin_colors') ) {
+			add_action('admin_init', 'register_admin_colors', 1);
+		} else {
+			wp_admin_css_color('classic', __('Blue'), admin_url("css/colors-classic.css"), array('#073447', '#21759B', '#EAF3FA', '#BBD8E7'));
+			wp_admin_css_color('fresh', __('Gray'), admin_url("css/colors-fresh.css"), array('#464646', '#6D6D6D', '#F1F1F1', '#DFDFDF'));
+		}
+		
+		$left = isset($_GET['left']) ? absint($_GET['left']) : false;
+		$right = isset($_GET['right']) ? absint($_GET['right']) : false;
+		
+		if ( !$left_revision  = get_post( $left ) )
+			break;
+		if ( !$right_revision = get_post( $right ) )
+			break;
+	
+		if ( !current_user_can( 'read_post', $left_revision->ID ) || !current_user_can( 'read_post', $right_revision->ID ) )
+			break;
+	
+		// If we're comparing a revision to itself, redirect to the 'view' page for that revision or the edit page for that post
+		if ( $left_revision->ID == $right_revision->ID ) {
+			wp_die( __('Sorry, But you cant compare a revision to itself.', 'revision-control') );
+			break;
+		}
+	
+		// Don't allow reverse diffs?
+		if ( strtotime($right_revision->post_modified_gmt) < strtotime($left_revision->post_modified_gmt) ) {
+			//$redirect = add_query_arg( array( 'left' => $right, 'right' => $left ) );
+			// Switch-a-roo
+			$temp_revision = $left_revision;
+			$left_revision = $right_revision;
+			$right_revision = $temp_revision;
+			unset($temp_revision);
+		}
+
+		global $post;
+
+		if ( $left_revision->ID == $right_revision->post_parent ) // right is a revision of left
+			$post = $left_revision;
+		elseif ( $left_revision->post_parent == $right_revision->ID ) // left is a revision of right
+			$post = $right_revision;
+		elseif ( $left_revision->post_parent == $right_revision->post_parent ) // both are revisions of common parent
+			$post = get_post( $left_revision->post_parent );
+		else
+			wp_die( __('Sorry, But you cant compare unrelated Revisions.', 'revision-control') ); // Don't diff two unrelated revisions
+
+		/*if ( !constant('WP_POST_REVISIONS') ) { // Revisions disabled
+			if (
+				// we're not looking at an autosave
+				( !wp_is_post_autosave( $left_revision ) || !wp_is_post_autosave( $right_revision ) )
+			||
+				// we're not comparing an autosave to the current post
+				( $post->ID !== $left_revision->ID && !$post->ID == $right_revision->ID )
+			)
+				die( __('Sorry, But you currently have revisions disabled for this post.', 'revision-control') );
+		}*/
+	
+		if (
+			// They're the same
+			$left_revision->ID == $right_revision->ID
+		||
+			// Neither is a revision
+			( !wp_get_post_revision( $left_revision->ID ) && !wp_get_post_revision( $right_revision->ID ) )
+		)
+			wp_die( __('Sorry, But you cant compare a Revision to itself.', 'revision-control') );
+
+		$title = sprintf( __( 'Compare Revisions of &#8220;%1$s&#8221;' ), get_the_title() );
+	
+		$left  = $left_revision->ID;
+		$right = $right_revision->ID;
+
+		iframe_header();
+
+		?>
+		<div class="wrap">
+		
+		<h2 class="long-header center"><?php echo $title ?></h2>
+		
+		<table class="form-table ie-fixed">
+			<col class="th" />
+		<tr id="revision">
+			<th scope="col" class="th-full">
+				<?php printf( __('Older: %s'), wp_post_revision_title($left_revision, false) ); ?>
+				<span class="alignright"><?php printf( __('Newer: %s'), wp_post_revision_title($right_revision, false) ); ?></span>
+			</th>
+		</tr>
+		<?php
+		
+		$fields = _wp_post_revision_fields();
+		
+		foreach ( get_object_taxonomies($post->post_type) as $taxonomy ) {
+			$t = get_taxonomy($taxonomy);
+			$fields[$taxonomy] = $t->label;
+			
+			$left_terms = $right_terms = array();
+			foreach ( wp_get_object_terms($left_revision->ID, $taxonomy ) as $term )
+				$left_terms[] = $term->name;
+			foreach ( wp_get_object_terms($right_revision->ID, $taxonomy ) as $term )
+				$right_terms[] = $term->name;
+
+			$left_revision->$taxonomy = ( empty($left_terms) ? '' : "* " ) . join("\n* ", $left_terms);
+			$right_revision->$taxonomy = ( empty($right_terms) ? '' : "* " ) . join("\n* ", $right_terms);
+			
+		}
+
+		$identical = true;
+		foreach ( $fields as $field => $field_title ) :
+			if ( !$content = wp_text_diff( $left_revision->$field, $right_revision->$field ) )
+				continue; // There is no difference between left and right
+			$identical = false;
+			?>
+			<tr>
+				<th scope="row"><strong><?php echo esc_html( $field_title ); ?></strong></th>
+			</tr>
+			<tr id="revision-field-<?php echo $field; ?>">
+				<td><div class="pre"><?php echo $content; ?></div></td>
+			</tr>
+			<?php
+		endforeach;
+		
+		if ( $identical ) :
+			?><tr><td><div class="updated"><p><?php _e( 'These Revisions are identical.' ); ?></p></div></td></tr><?php
+		endif;
+		?>
+		</table>
+		<p><?php _e('<em>Please Note:</em> at present, Although Taxonomies <em>(Tags / Categories / Custom Taxonomies)</em> are stored with the revisions, Restoring a Revision will <strong>not</strong> restore the taxonomies at present.', 'revision-control'); ?></p>
+		<br class="clear" />
+		<?php
+		iframe_footer();
+	}
+
+	function revisions_meta_box( $post_id = 0 ) {
+		global $revision_control;
+
+		if ( empty($post_id) )
+			$post_id = $GLOBALS['post_ID'];
+
+		if ( !$post = get_post( $post_id ) )
+			return;
+	
+		if ( !$revisions = wp_get_post_revisions( $post->ID ) )
+			$revisions = array();
+		
+		$revisions = $revisions + array($post);
+		usort($revisions, array('Plugin_Revision_Control', 'sort_revisions_by_time'));
+	?>
+	<noscript><div class="updated"><p><?php _e('<strong>Please Note</strong>: This module requires the use of Javascript.', 'revision-control') ?></p></div></noscript>
+	<input type="hidden" id="revision-control-nonce" value="<?php echo wp_create_nonce( 'revision-control-ajax' ) ?>" />
+	<table class="widefat post-revisions" id="post-revisions" cellspacing="0">
+		<col class="hide-if-no-js" />
+		<col style="" />
+		<col style="width: 15%" />
+		<col style="width: 15" />
+	<thead>
+	<tr>
+		<th scope="col" class="check-column hide-if-no-js"><a id="revision-compare-label"><?php _e( 'Compare' ) ?></a><a id="revision-delete-label" style="display:none"><?php _e( 'Delete' ) ?></a></th>
+		<th scope="col"><?php _e( 'Date Created' ); ?></th>
+		<th scope="col"><?php _e( 'Author' ); ?></th>
+		<th scope="col" class="action-links"><?php _e( 'Actions' ); ?></th>
+	</tr>
+	</thead>
+	<tbody>
+	
+	<?php
+	$titlef = _x( '%1$s by %2$s', 'post revision 1:datetime, 2:name' );
+
+	$rows = '';
+	$class = false;
+	$can_edit_post = current_user_can( 'edit_post', $post->ID );
+	//$locked_revision = false;
+	foreach ( $revisions as $revision ) {
+		if ( !current_user_can( 'read_post', $revision->ID ) )
+			continue;
+
+		if ( 'revision' === $revision->post_type && wp_is_post_autosave( $revision ) )
+			continue;
+
+		$date = wp_post_revision_title( $revision, false );
+		$name = get_the_author_meta( 'display_name', $revision->post_author );
+		
+		$revision_is_current = $post->ID == $revision->ID;
+		/*$revision_is_locked = $revision->ID == $locked_revision;*/
+
+		$class = strpos($class, 'alternate') !== false ? '' : "alternate";
+		
+		$class .= ' revision-' . $revision->ID;
+		
+		if ( $revision_is_current )
+			$class .= ' current-revision';
+		
+		/*if ( $revision_is_locked )
+			$class .= ' locked-revision';*/
+
+		$actions = array();
+		/*if ( !$revision_is_locked )
+			$actions[] = '<a href="#" class="lock" title="' . esc_attr__('Locks the selected revision to be the published copy. This allows you to work on modifications without making them public.', 'revision-control') . '">' . __('Lock', 'revision-control') . '</a>';
+		else
+			$actions[] = '<a href="#" class="unlock">' . __('Unlock', 'revision-control') . '</a>';*/
+		if ( $post->ID != $revision->ID && $can_edit_post ) {
+			$actions[] = '<a href="' . wp_nonce_url( add_query_arg( array( 'revision' => $revision->ID, 'diff' => false, 'action' => 'restore' ), 'revision.php' ), "restore-post_$post->ID|$revision->ID" ) . '">' . __( 'Restore' ) . '</a>';
+			$actions[] = '<a href="#" class="hide-if-no-js">' . __( 'Remove' ) . '</a>';
+		}
+
+		$deletedisabled = $revision_is_current ? 'disabled="disabled"' : ''; //$revision_is_locked || ($revision_is_current && false === $locked_revision)
+		$lefthidden = $revision == end($revisions) ? ' style="visibility: hidden" ' : '';
+		$righthidden = $revision == $revisions[0] ? ' style="visibility: hidden" ' : '';
+
+		echo "<tr class='$class' id='revision-row-$revision->ID'>\n";
+		echo "\t<th style='white-space: nowrap' scope='row' class='check-column hide-if-no-js'>
+					<span class='delete' style='display:none;'>
+						<input type='checkbox' name='checked[]' class='checklist' value='$revision->ID' $deletedisabled />
+					</span>
+					<span class='compare'>
+						<input type='radio' name='left' class='left' value='$revision->ID' $lefthidden />
+						<input type='radio' name='right' class='right' value='$revision->ID' $righthidden />
+					</span>
+				</th>\n";
+		echo "\t<td>$date</td>\n";
+		echo "\t<td>$name</td>\n";
+		echo "\t<td class='action-links'>" . implode(' | ', $actions) . "</td>\n";
+		echo "</tr>\n";
+	}
+	?>
+	
+	</tbody>
+	<tfoot>
+		<tr>
+			<td colspan="4" style="text-align:left" class="check-column">
+				<span class="hide-if-no-js">
+				<input type="button" class="button-secondary toggle-type" value="Delete" id="revisions-delete" style='display:none' />
+				<input type="button" class="button-secondary toggle-type" value="Compare" id="revisions-compare" />
+				</span>
+				<span class="alignright">
+					<?php if ( $revision_control->define_failure ) {
+						_e('<strong>Error:</strong> <code>WP_POST_REVISIONS</code> is defined in your <code>wp-config.php</code>. <em>Revision Control</em> cannot operate.', 'revision-control');
+					} else {
+						$_current = $post_specific = get_metadata('post', $post->ID, '_revision-control', true);
+						if ( '' == $post_specific )
+							$post_specific = array('defaults');
+						else if ( ! is_array($post_specific) )
+							$post_specific = Plugin_Revision_Control_Compat::postmeta($post_specific, $post);
+						$post_specific = $post_specific[0];
+						
+						if ( is_numeric($post_specific) )
+							printf( _nx( 'Currently storing a maximum of %d Revisions', 'Currently storing a maximum of %d Revision', $post_specific, 'revision-control' ), $post_specific );
+						elseif ( 'unlimited' == $post_specific )
+							_e('Currently storing an Unlimited number of Revisions', 'revision-control');
+						elseif ( 'never' == $post_specific )
+							_e('Not storing any Revisions', 'revision-control');
+					?>
+					<label for="limit-revisions"><strong><em>Revision Control:</em></strong>
+					<select name="limit_revisions[]" id="limit-revisions">
+						<?php
+						foreach ( $revision_control->get_revision_limit_select_items($post_specific[0]) as $val => $text ) {
+							$selected = $post_specific[0] === $val ? 'selected="selected"' : '';
+							echo "\t\t\t\t\t\t<option value='$val' $selected>$text</option>\n";
+						}
+						?></select>
+						<input type="hidden" name="limit_revisions_before<?php if ( is_array($_current) ) echo '[]' ?>" value="<?php echo esc_attr( is_array($_current) ? $_current[0] : $_current ) ?>" />
+					</label>
+					<?php } ?>
+				</span>
+				<br class="cear" />
+			</th>
+		</tr>
+	</tfoot>
+	</table>
+	<br class="clear" />
+	<?php
+	}
+	
+	function admin_page() {
+		global $revision_control;
+
+		echo "<div class='wrap'>";
+		screen_icon('options-general');
+		echo '<h2>' . __('Revision Control Options', 'revision-control') . '</h2>';
+		echo '<h3>' . __('Default revision status for <em>Post Types</em>', 'revision-control') . '</h3>';
+		
+		$types = get_post_types( array('revisions' => true) );
+		if  ( empty($types) )
+			$types = array('post', 'page');
+
+		echo '<form method="post" action="admin-post.php?action=revision-control-options">';
+		wp_nonce_field('revision-control-options');
+
+		echo '<table class="form-table">';
+		echo '<tr valign="top">
+				<th scope="row">' . __('Default Revision Status', 'revision-control') . '</th>
+				<td><table>';
+		foreach ( $types as $post_type ) {
+			$post_Type_name = $post_type;
+			if ( function_exists('get_post_type_object') ) {
+				$pt = get_post_type_object($post_type);
+				$post_type_name = $pt->label;
+				unset($pt);
+			} else {
+				global $wp_post_types;
+				$post_type_name = $wp_post_types[ $post_type ]->label;
+			}
+
+			echo '<tr><th style="width: auto;"><label for="options_per-type_' . $post_type . '"> <em>' . $post_type_name . '</em></label></th>';
+			echo '<td align="left"><select name="options[per-type][' . $post_type . ']" id="options_per-type_' . $post_type . '">';
+			$current = $revision_control->option($post_type, 'per-type');
+			foreach ( $revision_control->get_revision_limit_select_items($current) as $option_val => $option_text ) {
+				if ( 'defaults' == $option_val )
+					continue;
+				$selected = $current == $option_val ? ' selected="selected"' : ' ';
+				echo '<option value="' . esc_attr($option_val) . '"' . $selected . '>' . esc_html($option_text) . '</option>';
+			}
+			echo '</select></td></tr>';
+		}
+		echo '</table>';
+		echo '
+		</td>
+		</tr>';
+		echo '<tr>
+		<th scope="row"><label for="options_revision-range">' . __('Revision Range', 'revision-control') . '</label></th>
+				<td><textarea rows="2" cols="80" name="options[revision-range]" id="options_revision-range">' . esc_html($revision_control->option('revision-range')) . '</textarea><br />
+				' . __('<em><strong>Note:</strong> This field is special. It controls what appears in the Revision Options <code>&lt;select&gt;</code> fields.<br />The basic syntax of this is simple, fields are seperated by comma\'s.<br /> A field may either be a number, OR a range.<br /> For example: <strong>1,5</strong> displays 1 Revision, and 5 Revisions. <strong>1..5</strong> on the other hand, will display 1.. 2.. 3.. 4.. 5.. revisions.<br /> <strong>If in doubt, Leave this field alone.</strong></em>', 'revision-control') . '
+				</td>
+				</tr>';
+		echo '</table>';
+		echo '
+		<p class="submit">
+			<input type="submit" name="Submit" value="' . __('Save Changes', 'revision-control') . '" />
+		</p>
+		</form>';
+		echo '</div>';
+	}
+}

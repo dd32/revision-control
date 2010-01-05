@@ -1,0 +1,13 @@
+table.post-revisions tr.locked-revision,
+table.post-revisions tr.current-revision{
+	background-color:#E1F8DA;
+}
+
+table.post-revisions a.lock,
+table.post-revisions a.unlock {
+	color:#F00;
+}
+
+h2.center {
+	text-align: center !important;
+}
