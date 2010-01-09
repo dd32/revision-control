@@ -4,5 +4,3 @@ Please submit any translations in .mo/.po format to wordpress@dd32.id.au
 
 Thanks :)
 Dion
-
-Thanks to Stefano for the Italian Translation (& the help for how to use poedit:))

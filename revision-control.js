@@ -20,7 +20,7 @@ jQuery( function($) {
 		$.post('admin-post.php', {
 			action: 'revision-control-delete',
 			revisions: checked.join(','),
-			_wpnonce: $('#revision-control-nonce').val()
+			_wpnonce: $('#revision-control-delete-nonce').val()
 			}, function (xml) {	
 
 				var r = wpAjax.parseAjaxResponse(xml);
@@ -28,12 +28,12 @@ jQuery( function($) {
 				var success = r.responses[0].data;
 				if ( -1 == success ) {
 					//Error - Failed to delete.
-					
+					alert("Fail: " + xml);
 				} else {
 					//Removed OK
 					var revs = r.responses[0].supplemental.revisions.split(',');
 					for( var i in revs ) {
-						$('#revision-row-' + revs[i]).remove();
+						$('#revision-row-' + revs[i]).animate( {backgroundColor:'#fb4357'}, 1000).fadeOut(300, function() { $(this).remove(); });
 					}
 				}
 		});
