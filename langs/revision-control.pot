@@ -1,86 +1,211 @@
+# Translation of the WordPress plugin Revision Control 2.0-alpha by Dion Hulse.
+# Copyright (C) 2010 Dion Hulse
+# This file is distributed under the same license as the Revision Control package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2010.
+#
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Revision Control\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-27 18:26+1000\n"
-"PO-Revision-Date: \n"
-"Last-Translator: Dion Hulse <contact@dd32.id.au>\n"
-"Language-Team:  <contact@dd32.id.au>\n"
+"Project-Id-Version: Revision Control 2.0-alpha\n"
+"Report-Msgid-Bugs-To: http://wordpress.org/tag/revision-control\n"
+"POT-Creation-Date: 2010-01-09 12:24+0000\n"
+"PO-Revision-Date: 2010-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: French\n"
-"X-Poedit-Country: Australia\n"
-"X-Poedit-SourceCharset: utf-8\n"
-"X-Poedit-Basepath: C:\\www\\wordpress\\wp-content\\plugins\\revision-control\n"
-"X-Poedit-KeywordsList: __;_e\n"
-"X-Poedit-SearchPath-0: .\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: revision-control.php:38
-#: revision-control.php:151
-#: revision-control.php:294
-msgid "Revisions"
+#: revision-control.php:46
+msgid "Are you sure you wish to delete the selected Revisions?"
 msgstr ""
 
-#: revision-control.php:41
-#: revision-control.php:337
+#: revision-control.php:47
+msgid ""
+"Warning: Unlocking this post will cause the latest revision to be published!"
+"\\nContinue?"
+msgstr ""
+
+#. #-#-#-#-#  plugin.pot (Revision Control 2.0-alpha)  #-#-#-#-#
+#. Plugin Name of an extension
+#: revision-control.php:65
 msgid "Revision Control"
 msgstr ""
 
-#: revision-control.php:142
+#: revision-control.php:65
+msgid "Revisions"
+msgstr ""
+
+#: revision-control.php:75
 msgid "Post Revisions"
 msgstr ""
 
-#: revision-control.php:153
-#: revision-control.php:347
-#: revision-control.php:368
-msgid "Enabled"
+#: revision-control.php:222
+msgid "Default Revision Settings"
 msgstr ""
 
-#: revision-control.php:154
-#: revision-control.php:157
-#: revision-control.php:165
-msgid " (default)"
+#: revision-control.php:223
+msgid "Unlimited number of Revisions"
 msgstr ""
 
-#: revision-control.php:156
-#: revision-control.php:350
-#: revision-control.php:371
-msgid "Disabled"
+#: revision-control.php:224
+msgid "Do not store Revisions"
 msgstr ""
 
-#: revision-control.php:164
-#: revision-control.php:357
-#: revision-control.php:377
+#: revision-control.php:232 revision-control.php:235 revision-control.php:240
 #, php-format
-msgid "Limit to %d Revisions"
+msgctxt "revision-control"
+msgid "Maximum %d Revision stored"
+msgid_plural "Maximum %d Revisions stored"
+msgstr[0] ""
+msgstr[1] ""
+
+#: revision-control.php:378
+msgid "Sorry, But you cant compare unrelated Revisions."
 msgstr ""
 
-#: revision-control.php:262
-msgid "Are you sure you wish to delete this Revision?"
+#: revision-control.php:388
+msgid "Sorry, But you cant compare a Revision to itself."
 msgstr ""
 
-#: revision-control.php:262
-msgid "(delete)"
+#: revision-control.php:390
+#, php-format
+msgid "Compare Revisions of &#8220;%1$s&#8221;"
 msgstr ""
 
-#: revision-control.php:329
-msgid "Settings saved."
+#: revision-control.php:406
+#, php-format
+msgid "Older: %s"
 msgstr ""
 
-#: revision-control.php:334
-msgid "<strong>Error:</strong> You have defined <code>WP_POST_REVISIONS</code> in your <code>wp-config.php</code> file, In order to use this plugin you will need to remove it."
+#: revision-control.php:407
+#, php-format
+msgid "Newer: %s"
 msgstr ""
 
-#: revision-control.php:343
-msgid "Default Revision Status for Posts"
+#: revision-control.php:445
+msgid "These Revisions are identical."
 msgstr ""
 
-#: revision-control.php:364
-msgid "Default Revision Status for Pages"
+#: revision-control.php:449
+msgid ""
+"<em>Please Note:</em> at present, Although Taxonomies <em>(Tags / "
+"Categories / Custom Taxonomies)</em> are stored with the revisions, "
+"Restoring a Revision will <strong>not</strong> restore the taxonomies at "
+"present."
 msgstr ""
 
-#: revision-control.php:385
+#: revision-control.php:476
+msgid ""
+"<strong>Please Note</strong>: This module requires the use of Javascript."
+msgstr ""
+
+#: revision-control.php:485
+msgid "Switch between Compare/Delete modes"
+msgstr ""
+
+#: revision-control.php:485
+msgid "Compare Delete"
+msgstr ""
+
+#: revision-control.php:486
+msgid "Date Created"
+msgstr ""
+
+#: revision-control.php:487
+msgid "Author"
+msgstr ""
+
+#: revision-control.php:488
+msgid "Actions"
+msgstr ""
+
+#: revision-control.php:494
+#, php-format
+msgctxt "post revision 1:datetime, 2:name"
+msgid "%1$s by %2$s"
+msgstr ""
+
+#: revision-control.php:508
+#, php-format
+msgid ""
+"Revisions are currently enabled for %s, However there are no current "
+"Autosaves or Revisions created.<br />They'll be listed here once you Save. "
+"Happy Writing!"
+msgstr ""
+
+#: revision-control.php:536
+msgid "Restore"
+msgstr ""
+
+#: revision-control.php:537
+msgid "Remove"
+msgstr ""
+
+#: revision-control.php:571
+msgid ""
+"<strong>Error:</strong> <code>WP_POST_REVISIONS</code> is defined in your "
+"<code>wp-config.php</code>. <em>Revision Control</em> cannot operate."
+msgstr ""
+
+#: revision-control.php:586
+#, php-format
+msgctxt "revision-control"
+msgid "Currently storing a maximum of %d Revision"
+msgid_plural "Currently storing a maximum of %d Revisions"
+msgstr[0] ""
+msgstr[1] ""
+
+#: revision-control.php:588
+msgid "Currently storing an Unlimited number of Revisions"
+msgstr ""
+
+#: revision-control.php:590
+msgid "Not storing any Revisions"
+msgstr ""
+
+#: revision-control.php:617
+msgid "Revision Control Options"
+msgstr ""
+
+#: revision-control.php:618
+msgid "Default revision status for <em>Post Types</em>"
+msgstr ""
+
+#: revision-control.php:629
+msgid "Default Revision Status"
+msgstr ""
+
+#: revision-control.php:658
+msgid "Revision Range"
+msgstr ""
+
+#: revision-control.php:660
+msgid ""
+"<em><strong>Note:</strong> This field is special. It controls what appears "
+"in the Revision Options <code>&lt;select&gt;</code> fields.<br />The basic "
+"syntax of this is simple, fields are seperated by comma's.<br /> A field may "
+"either be a number, OR a range.<br /> For example: <strong>1,5</strong> "
+"displays 1 Revision, and 5 Revisions. <strong>1..5</strong> on the other "
+"hand, will display 1.. 2.. 3.. 4.. 5.. Revisions.<br /> <strong>If in doubt, "
+"Leave this field alone.</strong></em>"
+msgstr ""
+
+#: revision-control.php:666
 msgid "Save Changes"
 msgstr ""
 
+#. Plugin URI of an extension
+msgid "http://dd32.id.au/wordpress-plugins/revision-control/"
+msgstr ""
+
+#. Description of an extension
+msgid ""
+"Allows finer control over the number of Revisions stored on a global & per-"
+"type/page basis."
+msgstr ""
+
+#. Author of an extension
+msgid "Dion Hulse"
+msgstr ""
