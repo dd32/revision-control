@@ -1,20 +1,20 @@
 jQuery( function($) {
 
-	$('a#revision-compare-label, a#revision-delete-label').bind('click',
+	$('a#revision-compare-delete-label').bind('click',
 	function () {
-		$(this).parents('th').find('a').toggle();
 		$(this).parents('table').find('.check-column input.toggle-type').toggle();
 	});
 	
 	$('#revisions-delete').bind('click',
 	function () {
-		if ( !confirm('Are you sure you wish to delete the selected revisions?') )
+		if ( !confirm( RevisionControl.deleterevisions ) )
 			return;
 
 		var checked = [];
 		$('#revisionsdiv :checkbox').each(function(i, element) {
 											   if ( $(element).is(':checked') ) {
 												   checked[checked.length] = $(element).val();
+												   $(element).parents('tr').css('background-color', '#f7d2d6');
 												}
 											});
 		$.post('admin-post.php', {
@@ -50,15 +50,14 @@ jQuery( function($) {
 		tb_show("Revision Compare", 'admin-post.php?action=revision-control-revision-compare&left=' + left + '&right=' + right + '&TB_iframe=true', false);
 		
 		this.blur();
-		
-//alert(left + ' - ' + right);
+
 	});
 	
-	$('table.post-revisions a.unlock').bind('click', function() {
-														return confirm('Warning: Unlocking this post will cause the latest revision to be published!\nContinue?');
+	/*$('table.post-revisions a.unlock').bind('click', function() {
+														return confirm( RevisionControl.unlockrevision );
 																});
 	
-	/*$('table.post-revisions .check-column :radio').bind('click',
+	$('table.post-revisions .check-column :radio').bind('click',
 			function() {
 				var inputs = $('table.post-revisions .check-column :radio');
 				var left = $('table.post-revisions .check-column :radio .left');

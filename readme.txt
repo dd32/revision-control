@@ -11,20 +11,21 @@ Revision Control allows finer control over the Post Revision system included wit
 
 Revision Control is a plugin for WordPress 2.9+ which gives the user more control over the Revision functionality.
 
-The plugin allows the user to set a blog-global setting (Settings -> Revisions) for pages/posts to enable/disable/limit the number of revisions which are saved for the page/post. The user may change this setting on a per-page/post basis from the Revisions Meta box.
+The plugin allows the user to set a site-global setting (Settings -> Revisions) for pages/posts to enable/disable/limit the number of revisions which are saved for the page/post. The user may change this setting on a per-page/post basis from the Revisions Meta box.
 
 The plugin also allows the deletion of specific revisions via the Revisions post metabox.
 
 
-== Changelog ==
+== Faq ==
+ Q. How can i delete revisions?
+ A. At present, The only way to delete revisions is either, Individually on the Post/Page edit screen, Or by changing to Bulk deletion mode by clicking on the "Compare Delete" column header.
 
+== Changelog ==
 
 = 2.0 =
  * Rewrite from scratch(99%) utilising 2.9 only functionality
  * Better support for custom post types, Next release will finialise it in line with WordPress 3.0 development
  * Storing of Taxonomy changes in revisions (eg. You can see that TagX was added, while Category Z was removed.)
- * Delete of All revisions possible from the administration console
- * 
 
 = 2.0-pre =
  * Swedish Translation from Linus

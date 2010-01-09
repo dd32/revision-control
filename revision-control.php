@@ -39,8 +39,13 @@ class Plugin_Revision_Control {
 		foreach ( array('load-post-new.php', 'load-post.php', 'load-page-new.php', 'load-page.php') as $page )
 			add_action($page, array(&$this, 'meta_box'));
 
-		wp_register_script('revision-control', plugins_url( $this->folder . '/revision-control.js' ), array('jquery'), $this->version . time());
-		wp_register_style ('revision-control', plugins_url( $this->folder . '/revision-control.css' ), array(), $this->version . time());
+		wp_register_script('revision-control', plugins_url( $this->folder . '/revision-control.js' ), array('jquery', 'wp-ajax-response'), $this->version . time());
+		wp_register_style('revision-control', plugins_url( $this->folder . '/revision-control.css' ), array(), $this->version . time());
+		wp_localize_script('revision-control', 'RevisionControl', 
+						   array(
+							'deleterevisions' => __('Are you sure you wish to delete the selected Revisions?', 'revision-control'),
+							'unlockrevision' => __('Warning: Unlocking this post will cause the latest revision to be published!\nContinue?', 'revision-control')
+							) );
 		
 		// Add post handlers.
 		add_action('admin_post_revision-control-delete', array('Plugin_Revision_Control_Ajax', 'delete_revisions'));
@@ -131,7 +136,7 @@ class Plugin_Revision_Control {
 
 		}
 		// Ok, Lets define it.
-		$define_to = '' != $post_specific[0] ? $post_specific[0] : $default;
+		$define_to = isset($post_specific[0]) && '' != $post_specific[0] ? $post_specific[0] : $default;
 		switch ( $define_to ) {
 			case 'unlimited':
 				define('WP_POST_REVISIONS', true);
@@ -458,8 +463,14 @@ class Plugin_Revision_Control_UI {
 	
 		if ( !$revisions = wp_get_post_revisions( $post->ID ) )
 			$revisions = array();
-		
-		$revisions = $revisions + array($post);
+		if ( !empty($post) && !empty($post->ID) )
+			$revisions = $revisions + array($post);
+
+		foreach ( $revisions as $key => $revision ) {
+			if ( !current_user_can( 'read_post', $revision->ID ) )
+				unset($revisions[$key]);
+		}
+			
 		usort($revisions, array('Plugin_Revision_Control', 'sort_revisions_by_time'));
 	?>
 	<noscript><div class="updated"><p><?php _e('<strong>Please Note</strong>: This module requires the use of Javascript.', 'revision-control') ?></p></div></noscript>
@@ -471,7 +482,7 @@ class Plugin_Revision_Control_UI {
 		<col style="width: 15" />
 	<thead>
 	<tr>
-		<th scope="col" class="check-column hide-if-no-js"><a id="revision-compare-label" title="<?php echo esc_attr(__('Switch to Delete mode', 'revision-control')) ?>"><?php _e( 'Compare', 'revision-control' ) ?></a><a id="revision-delete-label" style="display:none" title="<?php echo esc_attr(__('Switch to Compare mode', 'revision-control')) ?>"><?php _e( 'Delete', 'revision-control' ) ?></a></th>
+		<th scope="col" class="check-column hide-if-no-js" style="text-align:center"><a id="revision-compare-delete-label" title="<?php echo esc_attr(__('Switch between Compare/Delete modes', 'revision-control')) ?>"><?php _e( 'Compare Delete', 'revision-control' ) ?></a></th>
 		<th scope="col"><?php _e( 'Date Created', 'revision-control' ); ?></th>
 		<th scope="col"><?php _e( 'Author', 'revision-control' ); ?></th>
 		<th scope="col" class="action-links"><?php _e( 'Actions', 'revision-control' ); ?></th>
@@ -484,12 +495,19 @@ class Plugin_Revision_Control_UI {
 
 	$rows = '';
 	$class = false;
-	$can_edit_post = current_user_can( 'edit_post', $post->ID );
+	if ( 0 == $post->ID )
+		$can_edit_post = true;
+	else
+		$can_edit_post = current_user_can( 'edit_post', $post->ID );
 	//$locked_revision = false;
-	
-	foreach ( $revisions as $key => $revision ) {
-		if ( !current_user_can( 'read_post', $revision->ID ) )
-			unset($revisions[$key]);
+
+	if ( empty($revisions) ) {
+		echo "<tr class='no-revisions'>\n";
+		echo "\t<td style='text-align: center' colspan='4'>\n";
+		$p_obj = get_post_type_object($post->post_type);
+		printf(__('Revisions are currently enabled for %s, However there are no current Autosaves or Revisions created.<br />They\'ll be listed here once you Save. Happy Writing!', 'revision-control'), $p_obj->label);
+		echo "</td>\n";
+		echo "</tr>\n";	
 	}
 	
 	foreach ( $revisions as $revision ) {
