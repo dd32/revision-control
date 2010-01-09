@@ -504,8 +504,14 @@ class Plugin_Revision_Control_UI {
 	if ( empty($revisions) ) {
 		echo "<tr class='no-revisions'>\n";
 		echo "\t<td style='text-align: center' colspan='4'>\n";
-		$p_obj = get_post_type_object($post->post_type);
-		printf(__('Revisions are currently enabled for %s, However there are no current Autosaves or Revisions created.<br />They\'ll be listed here once you Save. Happy Writing!', 'revision-control'), $p_obj->label);
+		if ( function_exists('get_post_type_object') ) {
+			$p_obj = get_post_type_object($post->post_type);
+			$obj_name = $p_obj->label;
+		} else {
+			global $wp_post_types;
+			$obj_name = ucwords($wp_post_types[ $post->post_type ]->name) . 's';
+		}
+		printf(__('Revisions are currently enabled for %s, However there are no current Autosaves or Revisions created.<br />They\'ll be listed here once you Save. Happy Writing!', 'revision-control'), $obj_name);
 		echo "</td>\n";
 		echo "</tr>\n";	
 	}
@@ -636,7 +642,7 @@ class Plugin_Revision_Control_UI {
 				unset($pt);
 			} else {
 				global $wp_post_types;
-				$post_type_name = $wp_post_types[ $post_type ]->label;
+				$post_type_name = ucwords($wp_post_types[ $post_type ]->name) . 's';
 			}
 
 			echo '<tr><th style="width: auto;"><label for="options_per-type_' . $post_type . '"> <em>' . $post_type_name . '</em></label></th>';
