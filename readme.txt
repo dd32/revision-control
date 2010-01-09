@@ -82,5 +82,5 @@ The plugin also allows the deletion of specific revisions via the Revisions post
 
 == Screenshots ==
 
-1. The Global Settings
-2. The per-post Settings
+1. The Revisions Meta box
+2. Revision Controls global settings
