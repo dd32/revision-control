@@ -651,6 +651,7 @@ class Plugin_Revision_Control_UI {
 					$obj_name = _n('Post', 'Posts', 5, 'revision-control');
 				elseif ( 'page' == $post_Type )
 					$obj_name = _n('Page', 'Pages', 5, 'revision-control');
+					
 			}
 
 			echo '<tr><th style="width: auto;"><label for="options_per-type_' . $post_type . '"> <em>' . $post_type_name . '</em></label></th>';
