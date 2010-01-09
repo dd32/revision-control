@@ -24,13 +24,20 @@ class Plugin_Revision_Control {
 		$this->folder = dirname($this->basename);
 
 		//Register general hooks.
-		add_action('admin_init', array(&$this, 'admin_init'));
-		add_action('admin_menu', array(&$this, 'admin_menu'));
+		add_action('init', array(&$this, 'load_translations')); // Needs to be done before admin_menu.
 		add_action('plugins_loaded', array(&$this, 'define_WP_POST_REVISIONS'));
+		add_action('admin_menu', array(&$this, 'admin_menu'));
+		add_action('admin_init', array(&$this, 'admin_init'));
 
 		// Load options - Must be done on inclusion as they're needed by plugins_loaded
 		$this->load_options();
 
+	}
+	function load_translations() {
+		if ( ! is_admin() )
+			return;
+		//Load any translations.
+		load_plugin_textdomain(	'revision-control', false, $this->folder . '/langs/');
 	}
 	
 	function admin_init() {
@@ -56,9 +63,6 @@ class Plugin_Revision_Control {
 		
 		// Version the terms.
 		add_action('_wp_put_post_revision', array(&$this, 'version_terms') );
-		
-		//Load any translations.
-		load_plugin_textdomain(	'revision-control', false, dirname(plugin_basename(__FILE__)) . '/langs/');
 	}
 	
 	function admin_menu() {
@@ -229,19 +233,19 @@ class Plugin_Revision_Control {
 			$val = trim($val);
 			if ( preg_match('|^(\d+)\.\.(\d+)$|', $val, $matches) ) {
 				foreach ( range( (int)$matches[1], (int)$matches[2]) as $num )
-					$items[ $num ] = sprintf( _nx( 'Maximum %d Revision stored', 'Maximum %d Revisions stored', $num, 'revision-control' ), $num );
+					$items[ $num ] = sprintf( _n( 'Maximum %s Revision stored', 'Maximum %s Revisions stored', $num, 'revision-control' ), number_format_i18n($num) );
 			} else if ( is_numeric($val) ) {
 				$num = (int)$val;
-				$items[ $num ] = sprintf( _nx( 'Maximum %d Revision stored', 'Maximum %d Revisions stored', $num, 'revision-control' ), $num );
+				$items[ $num ] = sprintf( _n( 'Maximum %s Revision stored', 'Maximum %s Revisions stored', $num, 'revision-control' ), number_format_i18n($num) );
 			}
 		}
 
 		if ( false != $current && is_numeric($current) && !isset($items[ $current ]) ) // Support for when the range changes and the global/per-post has changed since.
-			$items[ $current ] = sprintf( _nx( 'Maximum %d Revision stored', 'Maximum %d Revisions stored', $current, 'revision-control' ), $current );
+			$items[ $current ] = sprintf( _n( 'Maximum %s Revision stored', 'Maximum %s Revisions stored', $current, 'revision-control' ), number_format_i18n($current) );
 
 		return $items;
 	}
-
+	
 }
 
 class Plugin_Revision_Control_Compat {
@@ -387,7 +391,7 @@ class Plugin_Revision_Control_UI {
 		)
 			wp_die( __('Sorry, But you cant compare a Revision to itself.', 'revision-control') );
 
-		$title = sprintf( __( 'Compare Revisions of &#8220;%1$s&#8221;' ), get_the_title() );
+		$title = sprintf( __( 'Compare Revisions of &#8220;%1$s&#8221;', 'revision-control' ), get_the_title() );
 	
 		$left  = $left_revision->ID;
 		$right = $right_revision->ID;
@@ -442,7 +446,7 @@ class Plugin_Revision_Control_UI {
 		endforeach;
 		
 		if ( $identical ) :
-			?><tr><td><div class="updated"><p><?php _e( 'These Revisions are identical.' ); ?></p></div></td></tr><?php
+			?><tr><td><div class="updated"><p><?php _e( 'These Revisions are identical.', 'revision-control' ); ?></p></div></td></tr><?php
 		endif;
 		?>
 		</table>
@@ -482,7 +486,7 @@ class Plugin_Revision_Control_UI {
 		<col style="width: 15" />
 	<thead>
 	<tr>
-		<th scope="col" class="check-column hide-if-no-js" style="text-align:center"><a id="revision-compare-delete-label" title="<?php echo esc_attr(__('Switch between Compare/Delete modes', 'revision-control')) ?>"><?php _e( 'Compare Delete', 'revision-control' ) ?></a></th>
+		<th scope="col" class="check-column hide-if-no-js" style="text-align:center"><a id="revision-compare-delete-label" title="<?php esc_attr_e('Switch between Compare/Delete modes', 'revision-control') ?>"><?php _e( 'Compare Delete', 'revision-control' ) ?></a></th>
 		<th scope="col"><?php _e( 'Date Created', 'revision-control' ); ?></th>
 		<th scope="col"><?php _e( 'Author', 'revision-control' ); ?></th>
 		<th scope="col" class="action-links"><?php _e( 'Actions', 'revision-control' ); ?></th>
@@ -491,7 +495,7 @@ class Plugin_Revision_Control_UI {
 	<tbody>
 	
 	<?php
-	$titlef = _x( '%1$s by %2$s', 'post revision 1:datetime, 2:name' );
+	$titlef = _x( '%1$s by %2$s', 'post revision 1:datetime, 2:name', 'revision-control' );
 
 	$rows = '';
 	$class = false;
@@ -508,10 +512,12 @@ class Plugin_Revision_Control_UI {
 			$p_obj = get_post_type_object($post->post_type);
 			$obj_name = $p_obj->label;
 		} else {
-			global $wp_post_types;
-			$obj_name = ucwords($wp_post_types[ $post->post_type ]->name) . 's';
+			if ( 'post' == $post_type )
+				$obj_name = _n('Post', 'Posts', 5, 'revision-control');
+			elseif ( 'page' == $post_Type )
+				$obj_name = _n('Page', 'Pages', 5, 'revision-control');
 		}
-		printf(__('Revisions are currently enabled for %s, However there are no current Autosaves or Revisions created.<br />They\'ll be listed here once you Save. Happy Writing!', 'revision-control'), $obj_name);
+		printf(_x('Revisions are currently enabled for %s, However there are no current Autosaves or Revisions created.<br />They\'ll be listed here once you Save. Happy Writing!', '1: the Post_Type - Posts, Pages, etc. (plural always)', 'revision-control'), $obj_name);
 		echo "</td>\n";
 		echo "</tr>\n";	
 	}
@@ -569,8 +575,8 @@ class Plugin_Revision_Control_UI {
 		<tr>
 			<td colspan="4" style="text-align:left" class="check-column">
 				<span class="hide-if-no-js">
-				<input type="button" class="button-secondary toggle-type" value="Delete" id="revisions-delete" style='display:none' />
-				<input type="button" class="button-secondary toggle-type" value="Compare" id="revisions-compare" />
+				<input type="button" class="button-secondary toggle-type" value="<?php esc_attr_e('Delete', 'revision-control') ?>" id="revisions-delete" style='display:none' />
+				<input type="button" class="button-secondary toggle-type" value="<?php esc_attr_e('Compare', 'revision-control') ?>" id="revisions-compare" />
 				</span>
 				<span class="alignright">
 					<?php if ( $revision_control->define_failure ) {
@@ -589,7 +595,7 @@ class Plugin_Revision_Control_UI {
 					<label for="limit-revisions"><strong><em>Revision Control:</em></strong>
 					<?php
 					if ( is_numeric($_current_display) )
-						printf( _nx( 'Currently storing a maximum of %d Revision', 'Currently storing a maximum of %d Revisions', $_current_display, 'revision-control' ), $_current_display );
+						printf( _n( 'Currently storing a maximum of %s Revision', 'Currently storing a maximum of %s Revisions', $_current_display, 'revision-control' ), number_format_i18n($_current_display) );
 					elseif ( 'unlimited' == $_current_display )
 						_e('Currently storing an Unlimited number of Revisions', 'revision-control');
 					elseif ( 'never' == $_current_display )
@@ -641,8 +647,10 @@ class Plugin_Revision_Control_UI {
 				$post_type_name = $pt->label;
 				unset($pt);
 			} else {
-				global $wp_post_types;
-				$post_type_name = ucwords($wp_post_types[ $post_type ]->name) . 's';
+				if ( 'post' == $post_type )
+					$obj_name = _n('Post', 'Posts', 5, 'revision-control');
+				elseif ( 'page' == $post_Type )
+					$obj_name = _n('Page', 'Pages', 5, 'revision-control');
 			}
 
 			echo '<tr><th style="width: auto;"><label for="options_per-type_' . $post_type . '"> <em>' . $post_type_name . '</em></label></th>';
