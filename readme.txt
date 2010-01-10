@@ -29,6 +29,7 @@ The plugin also allows the deletion of specific revisions via the Revisions post
  * Translations:
  * German Translation from Tux
  * Hebrew Translation from Elad Salomons
+ * Russian Translation from Lecactus
 
 = 2.0-pre =
  * Swedish Translation from Linus
