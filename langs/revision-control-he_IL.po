@@ -77,12 +77,12 @@ msgstr "השוואת גרסאות עבור &#8220;%1$s&#8221;"
 #: revision-control.php:410
 #, php-format
 msgid "Older: %s"
-msgstr "ישנות יותר: %s"
+msgstr "ישנה יותר: %s"
 
 #: revision-control.php:411
 #, php-format
 msgid "Newer: %s"
-msgstr "חדשות יותר: %s"
+msgstr "חדשה יותר: %s"
 
 #: revision-control.php:449
 msgid "These Revisions are identical."
