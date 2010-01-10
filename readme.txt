@@ -28,6 +28,7 @@ The plugin also allows the deletion of specific revisions via the Revisions post
  * Storing of Taxonomy changes in revisions (eg. You can see that TagX was added, while Category Z was removed.)
  * Translations:
  * German Translation from Tux
+ * Hebrew Translation from Elad Salomons
 
 = 2.0-pre =
  * Swedish Translation from Linus

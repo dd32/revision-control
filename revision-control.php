@@ -508,13 +508,13 @@ class Plugin_Revision_Control_UI {
 	if ( empty($revisions) ) {
 		echo "<tr class='no-revisions'>\n";
 		echo "\t<td style='text-align: center' colspan='4'>\n";
-		if ( function_exists('get_post_type_object') ) {
+		if ( !in_array($post->post_type, array('post', 'page')) && function_exists('get_post_type_object') ) {
 			$p_obj = get_post_type_object($post->post_type);
 			$obj_name = $p_obj->label;
 		} else {
-			if ( 'post' == $post_type )
+			if ( 'post' == $post->post_type )
 				$obj_name = _n('Post', 'Posts', 5, 'revision-control');
-			elseif ( 'page' == $post_Type )
+			elseif ( 'page' == $post->post_type )
 				$obj_name = _n('Page', 'Pages', 5, 'revision-control');
 		}
 		printf(_x('Revisions are currently enabled for %s, However there are no current Autosaves or Revisions created.<br />They\'ll be listed here once you Save. Happy Writing!', '1: the Post_Type - Posts, Pages, etc. (plural always)', 'revision-control'), $obj_name);
@@ -592,7 +592,7 @@ class Plugin_Revision_Control_UI {
 						if ( 'defaults' == $_current_display )
 							$_current_display = $revision_control->option($post->post_type, 'per-type');
 					?>
-					<label for="limit-revisions"><strong><em>Revision Control:</em></strong>
+					<label for="limit-revisions"><strong><em><?php _e('Revision Control', 'revision-control') ?>:</em></strong>
 					<?php
 					if ( is_numeric($_current_display) )
 						printf( _n( 'Currently storing a maximum of %s Revision', 'Currently storing a maximum of %s Revisions', $_current_display, 'revision-control' ), number_format_i18n($_current_display) );
@@ -641,16 +641,16 @@ class Plugin_Revision_Control_UI {
 				<th scope="row">' . __('Default Revision Status', 'revision-control') . '</th>
 				<td><table>';
 		foreach ( $types as $post_type ) {
-			$post_Type_name = $post_type;
-			if ( function_exists('get_post_type_object') ) {
+			$post_type_name = $post_type;
+			if ( !in_array($post_type, array('post', 'page')) && function_exists('get_post_type_object') ) {
 				$pt = get_post_type_object($post_type);
 				$post_type_name = $pt->label;
 				unset($pt);
 			} else {
 				if ( 'post' == $post_type )
-					$obj_name = _n('Post', 'Posts', 5, 'revision-control');
-				elseif ( 'page' == $post_Type )
-					$obj_name = _n('Page', 'Pages', 5, 'revision-control');
+					$post_type_name = _n('Post', 'Posts', 5, 'revision-control');
+				elseif ( 'page' == $post_type )
+					$post_type_name = _n('Page', 'Pages', 5, 'revision-control');
 					
 			}
 
