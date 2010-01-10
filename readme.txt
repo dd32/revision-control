@@ -26,6 +26,8 @@ The plugin also allows the deletion of specific revisions via the Revisions post
  * Rewrite from scratch(99%) utilising 2.9 only functionality
  * Better support for custom post types, Next release will finialise it in line with WordPress 3.0 development
  * Storing of Taxonomy changes in revisions (eg. You can see that TagX was added, while Category Z was removed.)
+ * Translations:
+ * German Translation from Tux
 
 = 2.0-pre =
  * Swedish Translation from Linus
