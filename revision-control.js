@@ -43,11 +43,11 @@ jQuery( function($) {
 		var left = $(this).parents('table').find('input.left:checked').val();
 		var right = $(this).parents('table').find('input.right:checked').val();
 		if ( undefined == left || undefined == right ) {
-			alert("Please select both");
+			alert(RevisionControl.selectbothradio);
 			return;
 		}
 		
-		tb_show("Revision Compare", 'admin-post.php?action=revision-control-revision-compare&left=' + left + '&right=' + right + '&TB_iframe=true', false);
+		tb_show(RevisionControl.revisioncompare, 'admin-post.php?action=revision-control-revision-compare&left=' + left + '&right=' + right + '&TB_iframe=true', false);
 		
 		this.blur();
 
