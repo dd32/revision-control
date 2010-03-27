@@ -14,7 +14,7 @@ class Plugin_Revision_Control {
 	var $version = '2.0';
 	
 	var $define_failure = false;
-	var $options = array( 'per-type' => array('post' => 'unlimited', 'page' => 'unlimited', 'all' => 'unlimited'), 'revision-range' => '1..5,10,20,50,100' );
+	var $options = array( 'per-type' => array('post' => 'unlimited', 'page' => 'unlimited', 'all' => 'unlimited'), 'revision-range' => '2..5,10,20,50,100' );
 
 	function Plugin_Revision_Control() {
 		//Set the directory of the plugin:
@@ -70,7 +70,7 @@ class Plugin_Revision_Control {
 	}
 	
 	function meta_box() {
-		if ( function_exists('get_post_types') ) {
+		if ( function_exists('post_type_supports') ) {
 			$types = array();
 			$_types = get_post_types();
 			foreach ( $_types as $type ) {
@@ -172,6 +172,12 @@ class Plugin_Revision_Control {
 
 	function delete_old_revisions($id, $new) {
 		$items = get_posts( array('post_type' => 'revision', 'numberposts' => 1000, 'post_parent' => $id, 'post_status' => 'inherit', 'order' => 'ASC', 'orderby' => 'ID') );
+		if ( 'defaults' == $new ) {
+			$post = get_post($id);
+			if ( false === $default = $this->option($post->post_type, 'per-type') )
+				$default = $this->option('all', 'per-type');
+			$new = $default;
+		}
 		if ( ! is_numeric($new) ) {
 			switch ( $new ) {
 				case 'unlimited':
@@ -180,17 +186,13 @@ class Plugin_Revision_Control {
 				case 'never':
 					$keep = 0;
 					break;
-				case 'defaults':
-					$post = get_post($id);
-					if ( false === $default = $this->option($post->post_type, 'per-type') )
-						$default = $this->option('all', 'per-type');
-					$keep = $default;
-					break;
 			}
 		} else {
 			$keep = $new;
 		}
-		
+	//	var_dump($_POST, $keep, $new, $items, $this);
+	//	wp_redirect('');
+	//	die();
 		while ( count($items) > $keep ) {
 			$item = array_shift($items);
 			wp_delete_post_revision($item->ID);
@@ -664,7 +666,7 @@ class Plugin_Revision_Control_UI {
 		echo '<h2>' . __('Revision Control Options', 'revision-control') . '</h2>';
 		echo '<h3>' . __('Default revision status for <em>Post Types</em>', 'revision-control') . '</h3>';
 		
-		if ( function_exists('get_post_types') ) {
+		if ( function_exists('post_type_supports') ) {
 			$types = array();
 			$_types = get_post_types();
 			foreach ( $_types as $type ) {
