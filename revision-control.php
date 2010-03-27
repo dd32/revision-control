@@ -4,14 +4,14 @@ Plugin Name: Revision Control
 Plugin URI: http://dd32.id.au/wordpress-plugins/revision-control/
 Description: Allows finer control over the number of Revisions stored on a global & per-type/page basis.
 Author: Dion Hulse
-Version: 2.0-beta2
+Version: 2.0
 */
 
 $GLOBALS['revision_control'] = new Plugin_Revision_Control();
 class Plugin_Revision_Control {
 	var $basename = '';
 	var $folder = '';
-	var $version = '2.0-beta2';
+	var $version = '2.0';
 	
 	var $define_failure = false;
 	var $options = array( 'per-type' => array('post' => 'unlimited', 'page' => 'unlimited', 'all' => 'unlimited'), 'revision-range' => '1..5,10,20,50,100' );
@@ -70,9 +70,16 @@ class Plugin_Revision_Control {
 	}
 	
 	function meta_box() {
-		//$types = get_post_types( array('revisions' => true) );
-		//if  ( empty($types) )
+		if ( function_exists('get_post_types') ) {
+			$types = array();
+			$_types = get_post_types();
+			foreach ( $_types as $type ) {
+				if ( post_type_supports($type, 'revisions') )
+					$types[] = $type;
+			}
+		} else {
 			$types = array('post', 'page');
+		}
 
 		foreach ( $types as $post_type ) {
 			remove_meta_box('revisionsdiv', $post_type, 'normal');
@@ -87,14 +94,16 @@ class Plugin_Revision_Control {
 	}
 	
 	function save_post($id) {
-		$new = isset($_POST['limit_revisions']) ? stripslashes($_POST['limit_revisions']) : false;
+		$new = isset($_POST['limit_revisions'])        ? stripslashes($_POST['limit_revisions'])             : false;
 		$old = isset($_POST['limit_revisions_before']) ? stripslashes_deep($_POST['limit_revisions_before']) : false;
+
+		$id = $_POST['ID'];
+		$this->delete_old_revisions($id, $new);
 
 		if ( false === $new || false === $old )
 			return;
 		if ( $new == $old )
 			return;
-		
 		update_metadata('post', $id, '_revision-control', $new, $old);
 	}
 	
@@ -159,7 +168,34 @@ class Plugin_Revision_Control {
 				break;
 		}
 	}
-	
+
+	function delete_old_revisions($id, $new) {
+		$items = get_posts( array('post_type' => 'revision', 'numberposts' => 1000, 'post_parent' => $id, 'post_status' => 'inherit', 'order' => 'ASC', 'orderby' => 'ID') );
+		if ( ! is_numeric($new) ) {
+			switch ( $new ) {
+				case 'unlimited':
+					$keep = count($items);
+					break;
+				case 'never':
+					$keep = 0;
+					break;
+				case 'defaults':
+					$post = get_post($id);
+					if ( false === $default = $this->option($post->post_type, 'per-type') )
+						$default = $this->option('all', 'per-type');
+					$keep = $default;
+					break;
+			}
+		} else {
+			$keep = $new;
+		}
+		
+		while ( count($items) > $keep ) {
+			$item = array_shift($items);
+			wp_delete_post_revision($item->ID);
+		}
+
+	}
 
 	function get_current_post() {
 		foreach ( array( 'post_id', 'post_ID', 'post' ) as $field )
@@ -340,7 +376,6 @@ class Plugin_Revision_Control_Ajax {
 
 class Plugin_Revision_Control_UI {
 	function compare_revisions_iframe() {
-		
 		if ( function_exists('register_admin_colors') ) {
 			add_action('admin_init', 'register_admin_colors', 1);
 		} else {
@@ -348,18 +383,18 @@ class Plugin_Revision_Control_UI {
 			wp_admin_css_color('classic', 'Blue', admin_url("css/colors-classic.css"), array('#073447', '#21759B', '#EAF3FA', '#BBD8E7'));
 			wp_admin_css_color('fresh', 'Gray', admin_url("css/colors-fresh.css"), array('#464646', '#6D6D6D', '#F1F1F1', '#DFDFDF'));
 		}
-		
-		$left = isset($_GET['left']) ? absint($_GET['left']) : false;
+
+		$left  = isset($_GET['left'])  ? absint($_GET['left'])  : false;
 		$right = isset($_GET['right']) ? absint($_GET['right']) : false;
-		
+
 		if ( !$left_revision  = get_post( $left ) )
 			break;
 		if ( !$right_revision = get_post( $right ) )
 			break;
-	
+
 		if ( !current_user_can( 'read_post', $left_revision->ID ) || !current_user_can( 'read_post', $right_revision->ID ) )
 			break;
-	
+
 		// Don't allow reverse diffs?
 		if ( strtotime($right_revision->post_modified_gmt) < strtotime($left_revision->post_modified_gmt) ) {
 			//$redirect = add_query_arg( array( 'left' => $right, 'right' => $left ) );
@@ -486,7 +521,7 @@ class Plugin_Revision_Control_UI {
 		<col style="width: 15" />
 	<thead>
 	<tr>
-		<th scope="col" class="check-column hide-if-no-js" style="text-align:center"><a id="revision-compare-delete-label" title="<?php esc_attr_e('Switch between Compare/Delete modes', 'revision-control') ?>"><?php _e( 'Compare Delete', 'revision-control' ) ?></a></th>
+		<th scope="col" class="check-column hide-if-no-js" style="text-align:center; white-space:nowrap;"><a id="revision-compare-delete-label" title="<?php esc_attr_e('Switch between Compare/Delete modes', 'revision-control') ?>"><?php echo str_replace(' ', '<br />', __( 'Compare Delete', 'revision-control' )); //Sorry! Hack to work around preventing new translations being needed :( ?></a></th>
 		<th scope="col"><?php _e( 'Date Created', 'revision-control' ); ?></th>
 		<th scope="col"><?php _e( 'Author', 'revision-control' ); ?></th>
 		<th scope="col" class="action-links"><?php _e( 'Actions', 'revision-control' ); ?></th>
@@ -629,9 +664,16 @@ class Plugin_Revision_Control_UI {
 		echo '<h2>' . __('Revision Control Options', 'revision-control') . '</h2>';
 		echo '<h3>' . __('Default revision status for <em>Post Types</em>', 'revision-control') . '</h3>';
 		
-		$types = get_post_types( array('revisions' => true) );
-		if  ( empty($types) )
+		if ( function_exists('get_post_types') ) {
+			$types = array();
+			$_types = get_post_types();
+			foreach ( $_types as $type ) {
+				if ( post_type_supports($type, 'revisions') )
+					$types[] = $type;
+			}
+		} else {
 			$types = array('post', 'page');
+		}
 
 		echo '<form method="post" action="admin-post.php?action=revision-control-options">';
 		wp_nonce_field('revision-control-options');
