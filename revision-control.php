@@ -7,8 +7,6 @@ Author: Dion Hulse
 Version: 2.0-beta2
 */
 
-//add_action('all', create_function('', 'var_dump(current_filter());'));
-
 $GLOBALS['revision_control'] = new Plugin_Revision_Control();
 class Plugin_Revision_Control {
 	var $basename = '';

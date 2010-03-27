@@ -1,8 +1,8 @@
 ﻿=== Revision Control ===
 Contributors: dd32
-Tags: 2.9, 2.7, 2.6, revisions, post, admin
+Tags: 2.9, revisions, post, admin
 Requires at least: 2.9
-Tested up to: 3.0-dev
+Tested up to: 3.0
 Stable tag: 1.9.7
 
 Revision Control allows finer control over the Post Revision system included with WordPress
@@ -28,8 +28,11 @@ The plugin also allows the deletion of specific revisions via the Revisions post
  * Storing of Taxonomy changes in revisions (eg. You can see that TagX was added, while Category Z was removed.)
  * Translations:
  * German Translation from Tux
- * Hebrew Translation from Elad Salomons
+ * Hebrew Translation from Elad Salomons - http://elad.blogli.co.il
  * Russian Translation from Lecactus
+ * Italian Translation from Stefano Aglietti
+ * Estonian Translation from Lembit
+ * Japanese Translation from Tai
 
 = 2.0-pre =
  * Swedish Translation from Linus
