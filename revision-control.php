@@ -59,7 +59,7 @@ class Plugin_Revision_Control {
 		add_action('admin_post_revision-control-options', array('Plugin_Revision_Control_Ajax', 'save_options'));
 		add_action('admin_post_revision-control-revision-compare', array('Plugin_Revision_Control_UI', 'compare_revisions_iframe'));
 		
-		add_action('save_post', array(&$this, 'save_post'));
+		add_action('save_post', array(&$this, 'save_post'), 10, 2);
 		
 		// Version the terms.
 		add_action('_wp_put_post_revision', array(&$this, 'version_terms') );
@@ -93,12 +93,13 @@ class Plugin_Revision_Control {
 		add_thickbox();
 	}
 	
-	function save_post($id) {
+	function save_post($id, $post) {
 		$new = isset($_POST['limit_revisions'])        ? stripslashes($_POST['limit_revisions'])             : false;
 		$old = isset($_POST['limit_revisions_before']) ? stripslashes_deep($_POST['limit_revisions_before']) : false;
 
-		$id = $_POST['ID'];
-		$this->delete_old_revisions($id, $new);
+		$id = 'revision' == $post->post_type ? $post->post_parent : $post->ID;
+		if ( false !== $new )
+			$this->delete_old_revisions($id, $new);
 
 		if ( false === $new || false === $old )
 			return;
@@ -194,7 +195,6 @@ class Plugin_Revision_Control {
 			$item = array_shift($items);
 			wp_delete_post_revision($item->ID);
 		}
-
 	}
 
 	function get_current_post() {
@@ -581,7 +581,7 @@ class Plugin_Revision_Control_UI {
 			$actions[] = '<a href="#" class="unlock">' . __('Unlock', 'revision-control') . '</a>';*/
 		if ( $post->ID != $revision->ID && $can_edit_post ) {
 			$actions[] = '<a href="' . wp_nonce_url( add_query_arg( array( 'revision' => $revision->ID, 'diff' => false, 'action' => 'restore' ), 'revision.php' ), "restore-post_$post->ID|$revision->ID" ) . '">' . __( 'Restore', 'revision-control' ) . '</a>';
-			$actions[] = '<a href="#" class="hide-if-no-js">' . __( 'Remove', 'revision-control' ) . '</a>';
+			//$actions[] = '<a href="#" class="hide-if-no-js">' . __( 'Remove', 'revision-control' ) . '</a>';
 		}
 
 		$deletedisabled = $revision_is_current ? 'disabled="disabled"' : ''; //$revision_is_locked || ($revision_is_current && false === $locked_revision)
