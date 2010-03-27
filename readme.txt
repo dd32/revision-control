@@ -22,6 +22,9 @@ The plugin also allows the deletion of specific revisions via the Revisions post
 
 == Changelog ==
 
+= Next Release =
+ * Belorussian Translation from MarcisG
+
 = 2.0 =
  * Rewrite from scratch(99%) utilising 2.9 only functionality
  * Better support for custom post types, Next release will finialise it in line with WordPress 3.0 development
