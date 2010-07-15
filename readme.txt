@@ -3,7 +3,7 @@ Contributors: dd32
 Tags: 2.9, revisions, post, admin
 Requires at least: 2.9
 Tested up to: 3.0
-Stable tag: 2.0
+Stable tag: 2.0.1
 
 Revision Control allows finer control over the Post Revision system included with WordPress
 
@@ -24,6 +24,9 @@ The plugin also allows the deletion of specific revisions via the Revisions post
 
 = Next Release =
  * Belorussian Translation from MarcisG
+
+= 2.0.1 =
+ * Small IE bug fix, Table formatting was a bit wacky.
 
 = 2.0 =
  * Rewrite from scratch(99%) utilising 2.9 only functionality
