@@ -4,14 +4,14 @@ Plugin Name: Revision Control
 Plugin URI: http://dd32.id.au/wordpress-plugins/revision-control/
 Description: Allows finer control over the number of Revisions stored on a global & per-type/page basis.
 Author: Dion Hulse
-Version: 2.1-alpha
+Version: 2.0.1
 */
 
 $GLOBALS['revision_control'] = new Plugin_Revision_Control();
 class Plugin_Revision_Control {
 	var $basename = '';
 	var $folder = '';
-	var $version = '2.1-alpha';
+	var $version = '2.0.1';
 	
 	var $define_failure = false;
 	var $options = array( 'per-type' => array('post' => 'unlimited', 'page' => 'unlimited', 'all' => 'unlimited'), 'revision-range' => '2..5,10,20,50,100' );
@@ -610,7 +610,7 @@ class Plugin_Revision_Control_UI {
 	</tbody>
 	<tfoot>
 		<tr>
-			<td colspan="4" style="text-align:left" class="check-column">
+			<td colspan="4">
 				<span class="hide-if-no-js">
 				<input type="button" class="button-secondary toggle-type" value="<?php esc_attr_e('Delete', 'revision-control') ?>" id="revisions-delete" style='display:none' />
 				<input type="button" class="button-secondary toggle-type" value="<?php esc_attr_e('Compare', 'revision-control') ?>" id="revisions-compare" />
@@ -650,7 +650,7 @@ class Plugin_Revision_Control_UI {
 					<?php } ?>
 				</span>
 				<br class="cear" />
-			</th>
+			</td>
 		</tr>
 	</tfoot>
 	</table>
