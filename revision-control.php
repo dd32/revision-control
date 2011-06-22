@@ -7,7 +7,7 @@ Author: Dion Hulse
 Version: 2.0.1
 */
 
-$GLOBALS['revision_control'] = new Plugin_Revision_Control();
+$GLOBALS['revision_control'] = new Plugin_Revision_Control( plugin_basename(__FILE__) );
 class Plugin_Revision_Control {
 	var $basename = '';
 	var $folder = '';
@@ -16,30 +16,31 @@ class Plugin_Revision_Control {
 	var $define_failure = false;
 	var $options = array( 'per-type' => array('post' => 'unlimited', 'page' => 'unlimited', 'all' => 'unlimited'), 'revision-range' => '2..5,10,20,50,100' );
 
-	function Plugin_Revision_Control() {
+	function __construct($plugin) {
 		//Set the directory of the plugin:
-		$this->basename = plugin_basename(__FILE__);
-		$this->folder = dirname($this->basename);
-
-		//Register general hooks.
-		add_action('init', array(&$this, 'load_translations')); // Needs to be done before admin_menu.
-		add_action('plugins_loaded', array(&$this, 'define_WP_POST_REVISIONS'));
-		add_action('admin_menu', array(&$this, 'admin_menu'));
-		add_action('admin_init', array(&$this, 'admin_init'));
+		$this->basename = $plugin;
+		$this->folder = dirname($plugin);
 
 		// Load options - Must be done on inclusion as they're needed by plugins_loaded
 		$this->load_options();
 
-	}
-	function load_translations() {
+		add_action('plugins_loaded', array(&$this, 'define_WP_POST_REVISIONS'));
+
 		if ( ! is_admin() )
 			return;
+
+		//Register general hooks.
+		add_action('init', array(&$this, 'load_translations')); // Needs to be done before admin_menu.
+		add_action('admin_menu', array(&$this, 'admin_menu'));
+		add_action('admin_init', array(&$this, 'admin_init'));
+	}
+
+	function load_translations() {
 		//Load any translations.
 		load_plugin_textdomain(	'revision-control', false, $this->folder . '/langs/');
 	}
 	
 	function admin_init() {
-		
 		// Register post/page hook:
 		foreach ( array('load-post-new.php', 'load-post.php', 'load-page-new.php', 'load-page.php') as $page )
 			add_action($page, array(&$this, 'meta_box'));
@@ -63,6 +64,12 @@ class Plugin_Revision_Control {
 		
 		// Version the terms.
 		add_action('_wp_put_post_revision', array(&$this, 'version_terms') );
+		//Delete the terms
+		add_action('wp_delete_post_revision', array(&$this, 'delete_terms') );
+
+		// Version the postmeta
+		add_action('_wp_put_post_revision', array(&$this, 'version_postmeta') );
+		// Postmeta deletion is handled by core.
 	}
 	
 	function admin_menu() {
@@ -70,22 +77,13 @@ class Plugin_Revision_Control {
 	}
 	
 	function meta_box() {
-		if ( function_exists('post_type_supports') ) {
-			$types = array();
-			$_types = get_post_types();
-			foreach ( $_types as $type ) {
-				if ( post_type_supports($type, 'revisions') )
-					$types[] = $type;
+		foreach ( get_post_types() as $type ) {
+			if ( post_type_supports($type, 'revisions') ) {
+				remove_meta_box('revisionsdiv', $type, 'normal');
+				add_meta_box('revisionsdiv', __('Post Revisions'), array('Plugin_Revision_Control_UI', 'revisions_meta_box'), $type, 'normal');
 			}
-		} else {
-			$types = array('post', 'page');
 		}
 
-		foreach ( $types as $post_type ) {
-			remove_meta_box('revisionsdiv', $post_type, 'normal');
-			add_meta_box('revisionsdiv', __('Post Revisions'), array('Plugin_Revision_Control_UI', 'revisions_meta_box'), $post_type, 'normal');
-		}
-		
 		//enqueue that Stylin' script!
 		wp_enqueue_script('revision-control');
 		wp_enqueue_style('revision-control');
@@ -101,10 +99,9 @@ class Plugin_Revision_Control {
 		if ( false !== $new )
 			$this->delete_old_revisions($id, $new);
 
-		if ( false === $new || false === $old )
+		if ( false === $new || false === $old || $new == $old)
 			return;
-		if ( $new == $old )
-			return;
+
 		update_metadata('post', $id, '_revision-control', $new, $old);
 	}
 	
@@ -206,7 +203,7 @@ class Plugin_Revision_Control {
 
 		if ( isset($_REQUEST['revision']) )
 			if ( $post = get_post( $id = absint($_REQUEST['revision']) ) )
-				return get_post(absint($post->post_parent));
+				return get_post($post->post_parent);
 
 		return false;
 	}
@@ -228,8 +225,29 @@ class Plugin_Revision_Control {
 				wp_set_object_terms($revision_id, $terms, $taxonomy);
 		}
 	}
-	
-	function version_postmeta() {} // ?
+
+	function delete_terms($revision_id) {
+		if ( ! $rev = get_post($revision_id) )
+			return;
+		if ( ! $post = get_post($rev->post_parent) )
+			return;
+
+		// Delete the parent posts taxonomies from the revision.
+		wp_delete_object_term_relationships($revision_id, get_object_taxonomies($post->post_type) );
+	}
+
+	function version_postmeta($revision_id) {
+		// Attach all the terms from the parent to the revision.
+		if ( ! $rev = get_post($revision_id) )
+			return;
+		if ( ! $post = get_post($rev->post_parent) )
+			return;
+
+		// Only worry about taxonomies which are specifically linked.
+
+		
+
+	}
 	
 	function sort_revisions_by_time($a, $b) {
 		return strtotime($a->post_modified_gmt) < strtotime($b->post_modified_gmt);
@@ -378,13 +396,9 @@ class Plugin_Revision_Control_Ajax {
 
 class Plugin_Revision_Control_UI {
 	function compare_revisions_iframe() {
-		if ( function_exists('register_admin_colors') ) {
-			add_action('admin_init', 'register_admin_colors', 1);
-		} else {
-			// Hard coded translation strings here as the translations are not required, just the name and stlesheet.
-			wp_admin_css_color('classic', 'Blue', admin_url("css/colors-classic.css"), array('#073447', '#21759B', '#EAF3FA', '#BBD8E7'));
-			wp_admin_css_color('fresh', 'Gray', admin_url("css/colors-fresh.css"), array('#464646', '#6D6D6D', '#F1F1F1', '#DFDFDF'));
-		}
+		//add_action('admin_init', 'register_admin_colors', 1);
+
+		set_current_screen('revision-edit');
 
 		$left  = isset($_GET['left'])  ? absint($_GET['left'])  : false;
 		$right = isset($_GET['right']) ? absint($_GET['right']) : false;
@@ -464,8 +478,22 @@ class Plugin_Revision_Control_UI {
 
 			$left_revision->$taxonomy = ( empty($left_terms) ? '' : "* " ) . join("\n* ", $left_terms);
 			$right_revision->$taxonomy = ( empty($right_terms) ? '' : "* " ) . join("\n* ", $right_terms);
-			
 		}
+		
+		$fields['postmeta'] = __('Post Meta', 'revision-control');
+		$left_revision->postmeta = $right_revision->postmeta = array();
+		foreach ( (array)has_meta($right_revision->ID) as $meta ) {
+			if ( '_' == $meta['meta_key'][0] )
+				continue;
+
+	  		$right_revision->postmeta[] = $meta['meta_key'] . ': ' . $meta['meta_value'];
+			$left_val = get_post_meta('post', $left_revision->ID, $meta['meta_key'], true);
+			if ( !empty( $left_val ) )
+				$left_revision->postmeta[] = $meta['meta_key'] . ': ' . $left_val;
+		}
+
+		$right_revision->postmeta = implode("\n", $right_revision->postmeta);
+		$left_revision->postmeta = implode("\n", $left_revision->postmeta);
 
 		$identical = true;
 		foreach ( $fields as $field => $field_title ) :
@@ -517,13 +545,14 @@ class Plugin_Revision_Control_UI {
 	<noscript><div class="updated"><p><?php _e('<strong>Please Note</strong>: This module requires the use of Javascript.', 'revision-control') ?></p></div></noscript>
 	<input type="hidden" id="revision-control-delete-nonce" value="<?php echo wp_create_nonce( 'revision-control-delete' ) ?>" />
 	<table class="widefat post-revisions" id="post-revisions" cellspacing="0">
-		<col class="hide-if-no-js" />
-		<col style="" />
+		<col class="check-column hide-if-no-js" />
+		<col />
 		<col style="width: 15%" />
 		<col style="width: 15" />
 	<thead>
 	<tr>
-		<th scope="col" class="check-column hide-if-no-js" style="text-align:center; white-space:nowrap;"><a id="revision-compare-delete-label" title="<?php esc_attr_e('Switch between Compare/Delete modes', 'revision-control') ?>"><?php echo str_replace(' ', '<br />', __( 'Compare Delete', 'revision-control' )); //Sorry! Hack to work around preventing new translations being needed :( ?></a></th>
+		<th scope="col" class="check-column hide-if-no-js" style="text-align:center; white-space:nowrap;"><?php _e( 'Compare', 'revision-control' ); ?></th>
+		<th scope="col" class="check-column" style="text-align:center; white-space:nowrap;"><?php _e( 'Delete', 'revision-control' ); ?></th>
 		<th scope="col"><?php _e( 'Date Created', 'revision-control' ); ?></th>
 		<th scope="col"><?php _e( 'Author', 'revision-control' ); ?></th>
 		<th scope="col" class="action-links"><?php _e( 'Actions', 'revision-control' ); ?></th>
@@ -544,16 +573,9 @@ class Plugin_Revision_Control_UI {
 
 	if ( empty($revisions) ) {
 		echo "<tr class='no-revisions'>\n";
-		echo "\t<td style='text-align: center' colspan='4'>\n";
-		if ( !in_array($post->post_type, array('post', 'page')) && function_exists('get_post_type_object') ) {
-			$p_obj = get_post_type_object($post->post_type);
-			$obj_name = $p_obj->label;
-		} else {
-			if ( 'post' == $post->post_type )
-				$obj_name = _n('Post', 'Posts', 5, 'revision-control');
-			elseif ( 'page' == $post->post_type )
-				$obj_name = _n('Page', 'Pages', 5, 'revision-control');
-		}
+		echo "\t<td style='text-align: center' colspan='5'>\n";
+		$p_obj = get_post_type_object($post->post_type);
+		$obj_name = $p_obj->label;
 		printf(_x('Revisions are currently enabled for %s, However there are no current Autosaves or Revisions created.<br />They\'ll be listed here once you Save. Happy Writing!', '1: the Post_Type - Posts, Pages, etc. (plural always)', 'revision-control'), $obj_name);
 		echo "</td>\n";
 		echo "</tr>\n";	
@@ -583,7 +605,7 @@ class Plugin_Revision_Control_UI {
 			$actions[] = '<a href="#" class="unlock">' . __('Unlock', 'revision-control') . '</a>';*/
 		if ( $post->ID != $revision->ID && $can_edit_post ) {
 			$actions[] = '<a href="' . wp_nonce_url( add_query_arg( array( 'revision' => $revision->ID, 'diff' => false, 'action' => 'restore' ), 'revision.php' ), "restore-post_$post->ID|$revision->ID" ) . '">' . __( 'Restore', 'revision-control' ) . '</a>';
-			//$actions[] = '<a href="#" class="hide-if-no-js">' . __( 'Remove', 'revision-control' ) . '</a>';
+			//$actions[] = '<a href="#" class="hide-if-no-js">' . __( 'Delete', 'revision-control' ) . '</a>';
 		}
 
 		$deletedisabled = $revision_is_current ? 'disabled="disabled"' : ''; //$revision_is_locked || ($revision_is_current && false === $locked_revision)
@@ -591,13 +613,15 @@ class Plugin_Revision_Control_UI {
 		$righthidden = $revision == $revisions[0] ? ' style="visibility: hidden" ' : '';
 
 		echo "<tr class='$class' id='revision-row-$revision->ID'>\n";
-		echo "\t<th style='white-space: nowrap' scope='row' class='check-column hide-if-no-js'>
-					<span class='delete'>
-						<input type='checkbox' name='checked[]' class='checklist toggle-type' style='display:none;' value='$revision->ID' $deletedisabled />
-					</span>
+		echo "\t<th style='white-space: nowrap' scope='row' class='check-column'>
 					<span class='compare'>
 						<input type='radio' name='left' class='left toggle-type' value='$revision->ID' $lefthidden />
 						<input type='radio' name='right' class='right toggle-type' value='$revision->ID' $righthidden />
+					</span>
+				</th>
+				<th style='white-space: nowrap' scope='row' class='check-column hide-if-no-js'>
+					<span class='delete'>
+						<input type='checkbox' name='checked[]' class='checklist toggle-type' style='display:none;' value='$revision->ID' $deletedisabled />
 					</span>
 				</th>\n";
 		echo "\t<td>$date</td>\n";
@@ -720,10 +744,8 @@ class Plugin_Revision_Control_UI {
 				</td>
 				</tr>';
 		echo '</table>';
+		submit_button( __('Save Changes', 'revision-control') );
 		echo '
-		<p class="submit">
-			<input type="submit" name="Submit" value="' . __('Save Changes', 'revision-control') . '" />
-		</p>
 		</form>';
 		echo '</div>';
 	}
