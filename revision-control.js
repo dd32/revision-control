@@ -1,12 +1,14 @@
-jQuery( function($) {
+jQuery(document).ready( function($) {
 
-	$('a#revision-compare-delete-label').bind('click',
-	function () {
-		$(this).parents('table').find('.check-column input.toggle-type').toggle();
+	$('a#revision-compare-delete-label').bind('click', function () {
+		$(this).parents('table').find('.check-column input.toggle-type, tfoot input.toggle-type').toggle();
 	});
-	
-	$('#revisions-delete').bind('click',
-	function () {
+
+	$('#post-revisions a.delete').click( function() {
+		return confirm( RevisionControl.deleterevisions );
+	});
+
+	$('#revisions-delete').bind('click', function () {
 		if ( !confirm( RevisionControl.deleterevisions ) )
 			return;
 
@@ -28,7 +30,7 @@ jQuery( function($) {
 				var success = r.responses[0].data;
 				if ( -1 == success ) {
 					//Error - Failed to delete.
-					alert("Fail: " + xml);
+					alert("The AJAX request has Failed, Please try again;\n The unexpected data was: " + xml);
 				} else {
 					//Removed OK
 					var revs = r.responses[0].supplemental.revisions.split(',');
@@ -38,12 +40,11 @@ jQuery( function($) {
 				}
 		});
 	});
-	$('#revisions-compare').bind('click', 
-	function () {
+	$('#revisions-compare').click( function () {
 		var left = $(this).parents('table').find('input.left:checked').val();
 		var right = $(this).parents('table').find('input.right:checked').val();
 		if ( undefined == left || undefined == right ) {
-			alert(RevisionControl.selectbothradio);
+			alert( RevisionControl.selectbothradio );
 			return;
 		}
 		

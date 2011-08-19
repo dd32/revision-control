@@ -4,14 +4,14 @@ Plugin Name: Revision Control
 Plugin URI: http://dd32.id.au/wordpress-plugins/revision-control/
 Description: Allows finer control over the number of Revisions stored on a global & per-type/page basis.
 Author: Dion Hulse
-Version: 2.0.1
+Version: 2.1
 */
 
 $GLOBALS['revision_control'] = new Plugin_Revision_Control( plugin_basename(__FILE__) );
 class Plugin_Revision_Control {
 	var $basename = '';
 	var $folder = '';
-	var $version = '2.0.1';
+	var $version = '2.1';
 	
 	var $define_failure = false;
 	var $options = array( 'per-type' => array('post' => 'unlimited', 'page' => 'unlimited', 'all' => 'unlimited'), 'revision-range' => '2..5,10,20,50,100' );
@@ -65,7 +65,7 @@ class Plugin_Revision_Control {
 		// Version the terms.
 		add_action('_wp_put_post_revision', array(&$this, 'version_terms') );
 		//Delete the terms
-		add_action('wp_delete_post_revision', array(&$this, 'delete_terms') );
+		add_action('wp_delete_post_revision', array(&$this, 'delete_terms'), 10, 2 );
 
 		// Version the postmeta
 		add_action('_wp_put_post_revision', array(&$this, 'version_postmeta') );
@@ -187,9 +187,7 @@ class Plugin_Revision_Control {
 		} else {
 			$keep = $new;
 		}
-	//	var_dump($_POST, $keep, $new, $items, $this);
-	//	wp_redirect('');
-	//	die();
+
 		while ( count($items) > $keep ) {
 			$item = array_shift($items);
 			wp_delete_post_revision($item->ID);
@@ -226,9 +224,7 @@ class Plugin_Revision_Control {
 		}
 	}
 
-	function delete_terms($revision_id) {
-		if ( ! $rev = get_post($revision_id) )
-			return;
+	function delete_terms($revision_id, $rev) {
 		if ( ! $post = get_post($rev->post_parent) )
 			return;
 
@@ -244,8 +240,6 @@ class Plugin_Revision_Control {
 			return;
 
 		// Only worry about taxonomies which are specifically linked.
-
-		
 
 	}
 	
@@ -369,7 +363,7 @@ class Plugin_Revision_Control_Ajax {
 
 		foreach ( $revisions as $revision_id ) {
 			$revision = get_post($revision_id);
-			if ( current_user_can('delete_post', $revision->post_parent) )
+			if ( wp_is_post_revision($revision) && !wp_is_post_autosave($revision) && current_user_can('delete_post', $revision->post_parent) )
 				if ( wp_delete_post_revision($revision_id) )
 					$deleted[] = $revision_id;
 		}
@@ -446,6 +440,9 @@ class Plugin_Revision_Control_UI {
 	
 		$left  = $left_revision->ID;
 		$right = $right_revision->ID;
+
+		$GLOBALS['hook_suffix'] = 'revision-control';
+		wp_enqueue_style('revision-control');
 
 		iframe_header();
 
@@ -545,14 +542,15 @@ class Plugin_Revision_Control_UI {
 	<noscript><div class="updated"><p><?php _e('<strong>Please Note</strong>: This module requires the use of Javascript.', 'revision-control') ?></p></div></noscript>
 	<input type="hidden" id="revision-control-delete-nonce" value="<?php echo wp_create_nonce( 'revision-control-delete' ) ?>" />
 	<table class="widefat post-revisions" id="post-revisions" cellspacing="0">
+		<col class="check-column" />
 		<col class="check-column hide-if-no-js" />
 		<col />
 		<col style="width: 15%" />
 		<col style="width: 15" />
 	<thead>
 	<tr>
+		<th scope="col" class="check-column delete-column" style="text-align:center; white-space:nowrap;"><input type='checkbox' name='checked[]' class='checklist' /><?php _e( 'Delete', 'revision-control' ); ?></th>
 		<th scope="col" class="check-column hide-if-no-js" style="text-align:center; white-space:nowrap;"><?php _e( 'Compare', 'revision-control' ); ?></th>
-		<th scope="col" class="check-column" style="text-align:center; white-space:nowrap;"><?php _e( 'Delete', 'revision-control' ); ?></th>
 		<th scope="col"><?php _e( 'Date Created', 'revision-control' ); ?></th>
 		<th scope="col"><?php _e( 'Author', 'revision-control' ); ?></th>
 		<th scope="col" class="action-links"><?php _e( 'Actions', 'revision-control' ); ?></th>
@@ -603,25 +601,25 @@ class Plugin_Revision_Control_UI {
 			$actions[] = '<a href="#" class="lock" title="' . esc_attr__('Locks the selected revision to be the published copy. This allows you to work on modifications without making them public.', 'revision-control') . '">' . __('Lock', 'revision-control') . '</a>';
 		else
 			$actions[] = '<a href="#" class="unlock">' . __('Unlock', 'revision-control') . '</a>';*/
-		if ( $post->ID != $revision->ID && $can_edit_post ) {
+		if ( ! $revision_is_current && !wp_is_post_autosave($revision) && $can_edit_post ) {
 			$actions[] = '<a href="' . wp_nonce_url( add_query_arg( array( 'revision' => $revision->ID, 'diff' => false, 'action' => 'restore' ), 'revision.php' ), "restore-post_$post->ID|$revision->ID" ) . '">' . __( 'Restore', 'revision-control' ) . '</a>';
-			//$actions[] = '<a href="#" class="hide-if-no-js">' . __( 'Delete', 'revision-control' ) . '</a>';
+			//$actions[] = '<a href="#" class="hide-if-no-js delete">' . __( 'Delete', 'revision-control' ) . '</a>';
 		}
 
-		$deletedisabled = $revision_is_current ? 'disabled="disabled"' : ''; //$revision_is_locked || ($revision_is_current && false === $locked_revision)
+		$deletedisabled = ( $revision_is_current || wp_is_post_autosave($revision) || ! $can_edit_post ) ? 'disabled="disabled"' : ''; //$revision_is_locked || ($revision_is_current && false === $locked_revision)
 		$lefthidden = $revision == end($revisions) ? ' style="visibility: hidden" ' : '';
 		$righthidden = $revision == $revisions[0] ? ' style="visibility: hidden" ' : '';
 
 		echo "<tr class='$class' id='revision-row-$revision->ID'>\n";
-		echo "\t<th style='white-space: nowrap' scope='row' class='check-column'>
+		echo "\t<th style='white-space: nowrap' scope='row' class='check-column hide-if-no-js'>
+					<span class='delete'>
+						<input type='checkbox' name='checked[]' class='checklist toggle-type' value='$revision->ID' $deletedisabled />
+					</span>
+				</th>
+				<th style='white-space: nowrap' scope='row' class='check-column'>
 					<span class='compare'>
 						<input type='radio' name='left' class='left toggle-type' value='$revision->ID' $lefthidden />
 						<input type='radio' name='right' class='right toggle-type' value='$revision->ID' $righthidden />
-					</span>
-				</th>
-				<th style='white-space: nowrap' scope='row' class='check-column hide-if-no-js'>
-					<span class='delete'>
-						<input type='checkbox' name='checked[]' class='checklist toggle-type' style='display:none;' value='$revision->ID' $deletedisabled />
 					</span>
 				</th>\n";
 		echo "\t<td>$date</td>\n";
@@ -634,10 +632,10 @@ class Plugin_Revision_Control_UI {
 	</tbody>
 	<tfoot>
 		<tr>
-			<td colspan="4">
+			<td colspan="5">
+				<input type="button" class="button-secondary" value="<?php esc_attr_e('Delete', 'revision-control') ?>" id="revisions-delete" />
 				<span class="hide-if-no-js">
-				<input type="button" class="button-secondary toggle-type" value="<?php esc_attr_e('Delete', 'revision-control') ?>" id="revisions-delete" style='display:none' />
-				<input type="button" class="button-secondary toggle-type" value="<?php esc_attr_e('Compare', 'revision-control') ?>" id="revisions-compare" />
+				<input type="button" class="button-secondary" value="<?php esc_attr_e('Compare', 'revision-control') ?>" id="revisions-compare" />
 				</span>
 				<span class="alignright">
 					<?php if ( $revision_control->define_failure ) {
