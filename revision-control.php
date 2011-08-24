@@ -80,7 +80,7 @@ class Plugin_Revision_Control {
 		foreach ( get_post_types() as $type ) {
 			if ( post_type_supports($type, 'revisions') ) {
 				remove_meta_box('revisionsdiv', $type, 'normal');
-				add_meta_box('revisionsdiv', __('Post Revisions'), array('Plugin_Revision_Control_UI', 'revisions_meta_box'), $type, 'normal');
+				add_meta_box('revisionsdiv', __('Post Revisions', 'revision-control'), array('Plugin_Revision_Control_UI', 'revisions_meta_box'), $type, 'normal');
 			}
 		}
 

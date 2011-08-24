@@ -21,6 +21,11 @@ The plugin also allows the deletion of specific revisions via the Revisions post
 
 == Changelog ==
 
+= 2.1.1 =
+ * Portuguese Translation from PedroDM of development.mowster.net
+ * Don't make people think it'll delete the current revisions
+ * Don't give strange error when no revisions are selected
+
 = 2.1 =
  * Belorussian Translation from MarcisG
  * Bugfix: Delete Taxonomy relations for Revisions upon revision deletion

@@ -1,24 +1,28 @@
 jQuery(document).ready( function($) {
 
-	$('a#revision-compare-delete-label').bind('click', function () {
-		$(this).parents('table').find('.check-column input.toggle-type, tfoot input.toggle-type').toggle();
-	});
-
 	$('#post-revisions a.delete').click( function() {
 		return confirm( RevisionControl.deleterevisions );
 	});
 
+	$('#revisionsdiv thead th.check-column :checkbox').change( function() {
+		$('#revisionsdiv tbody :checkbox:checked:disabled').each( function(i, element) {
+			this.checked = false;
+		});
+	});
+
 	$('#revisions-delete').bind('click', function () {
+		var checked = [];
+		$('#revisionsdiv tbody :checkbox:checked').not(':disabled').each(function(i, element) {
+		   checked[checked.length] = $(element).val();
+		   $(element).parents('tr').css('background-color', '#f7d2d6');
+		});
+
+		if ( !checked.length )
+			return;
+
 		if ( !confirm( RevisionControl.deleterevisions ) )
 			return;
 
-		var checked = [];
-		$('#revisionsdiv :checkbox').each(function(i, element) {
-											   if ( $(element).is(':checked') ) {
-												   checked[checked.length] = $(element).val();
-												   $(element).parents('tr').css('background-color', '#f7d2d6');
-												}
-											});
 		$.post('admin-post.php', {
 			action: 'revision-control-delete',
 			revisions: checked.join(','),
