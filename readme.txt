@@ -1,7 +1,7 @@
-﻿=== Revision Control ===
+=== Revision Control ===
 Contributors: dd32
 Tags: revisions, post, admin
-Requires at least: 3.2
+Requires at least: 3.6
 Stable tag: 2.1
 
 Revision Control allows finer control over the Post Revision system included with WordPress
@@ -10,16 +10,23 @@ Revision Control allows finer control over the Post Revision system included wit
 
 Revision Control is a plugin for WordPress which gives the user more control over the Revision functionality.
 
-The plugin allows the user to set a site-global setting (Settings -> Revisions) for pages/posts to enable/disable/limit the number of revisions which are saved for the page/post. The user may change this setting on a per-page/post basis from the Revisions Meta box.
-
-The plugin also allows the deletion of specific revisions via the Revisions post metabox.
+The plugin allows the user to set a site-global setting (Settings -> Revisions) for pages/posts to enable/disable/limit the number of revisions which are saved for the page/post. The user may change this setting on a per-page/post basis from the Publish Meta box.
 
 == Ugrade Notice ==
+
+= 2.2 =
+ WordPress 3.6 enhancements, A bunch of functionality has also been removed, check the changelog
 
 = 2.1 =
  Belorussian Translation, 3.2.x styling, Compare/Delete toggle fix, properly delete Taxonomy relationships.
 
 == Changelog ==
+
+= 2.2 =
+ * WordPress 3.6 Compatibility
+ * The Revisions Metabox is no longer, you can now control the per-post revision control settings from the Publish metabox
+ * The ability to delete specific revisions is no longer possible
+ * The revision compare method is now the standard WordPress 3.6 Revisions compare manager (which is vastly improved from previous versions)
 
 = 2.1.1 =
  * Portuguese Translation from PedroDM of development.mowster.net
