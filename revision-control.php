@@ -25,7 +25,7 @@ class Plugin_Revision_Control {
 	);
 	var $options_loaded = false;
 
-	function __construct($plugin) {
+	function __construct() {
 		// Register general hooks.
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		add_action( 'admin_init', array( $this, 'admin_init' ) );
