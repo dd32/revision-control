@@ -27,6 +27,7 @@ The plugin allows the user to set a site-global setting (Settings -> Revisions) 
  * The Revisions Metabox is no longer, you can now control the per-post revision control settings from the Publish metabox
  * The ability to delete specific revisions is no longer possible
  * The revision compare method is now the standard WordPress 3.6 Revisions compare manager (which is vastly improved from previous versions)
+ * ACCIDENTALLY RELEASED.. No idea how or why.
 
 = 2.1.1 =
  * Portuguese Translation from PedroDM of development.mowster.net
