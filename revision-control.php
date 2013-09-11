@@ -4,7 +4,7 @@ Plugin Name: Revision Control
 Plugin URI: http://dd32.id.au/wordpress-plugins/revision-control/
 Description: Allows finer control over the number of Revisions stored on a global & per-type/page basis.
 Author: Dion Hulse
-Version: 2.2
+Version: 3.0-alpha
 */
 
 $GLOBALS['revision_control'] = new Plugin_Revision_Control();
@@ -13,7 +13,7 @@ class Plugin_Revision_Control {
 	const UNLIMITED_REVISIONS = -1;
 	const NO_REVISIONS = 0;
 
-	var $version = '2.2';
+	var $version = '3.0-alpha';
 
 	var $options = array(
 		'per-type' => array(
