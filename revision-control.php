@@ -603,7 +603,7 @@ class Plugin_Revision_Control_UI {
 		else
 			$actions[] = '<a href="#" class="unlock">' . __('Unlock', 'revision-control') . '</a>';*/
 		if ( ! $revision_is_current && !wp_is_post_autosave($revision) && $can_edit_post ) {
-			$actions[] = '<a href="' . wp_nonce_url( add_query_arg( array( 'revision' => $revision->ID, 'diff' => false, 'action' => 'restore' ), 'revision.php' ), "restore-post_$post->ID|$revision->ID" ) . '">' . __( 'Restore', 'revision-control' ) . '</a>';
+			$actions[] = '<a href="' . wp_nonce_url( add_query_arg( array( 'revision' => $revision->ID, 'diff' => false, 'action' => 'restore' ), 'revision.php' ), "restore-post_{$revision->ID}" ) . '">' . __( 'Restore', 'revision-control' ) . '</a>';
 			//$actions[] = '<a href="#" class="hide-if-no-js delete">' . __( 'Delete', 'revision-control' ) . '</a>';
 		}
 

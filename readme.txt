@@ -1,7 +1,7 @@
 === Revision Control ===
 Contributors: dd32
 Tags: revisions, post, admin
-Requires at least: 3.2
+Requires at least: 4.0
 Stable tag: 2.3.1
 
 Revision Control allows finer control over the Post Revision system included with WordPress
@@ -19,7 +19,7 @@ The plugin also allows the deletion of specific revisions via the Revisions post
 == Ugrade Notice ==
 
 = 2.3.1 =
- PHP compatability changes, no other changes.
+ PHP compatability changes, Fix the Revision Restore link (Bumps the requirement to WordPress 4.0)
 
 = 2.3 =
  WordPress.org accidentally released version 2.2 (A in-development re-work of Revision Control for WordPress 3.6+), This reverts the plugin back to the previous code, Sorry everyone :(
