@@ -16,7 +16,7 @@ The plugin allows the user to set a site-global setting (Settings -> Revisions) 
 
 The plugin also allows the deletion of specific revisions via the Revisions post metabox.
 
-== Ugrade Notice ==
+== Upgrade Notice ==
 
 = 2.3.1 =
  PHP compatability changes, Fix the Revision Restore link, Requires WordPress 4.0+
