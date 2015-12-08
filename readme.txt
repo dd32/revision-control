@@ -18,10 +18,14 @@ The plugin also allows the deletion of specific revisions via the Revisions post
 
 == Upgrade Notice ==
 
-= 2.3.1 =
- PHP compatability changes, Fix the Revision Restore link, Requires WordPress 4.0+
+= 2.3.2 =
+PHP 7 compatability changes, Uses WordPress.org Language Packs for translations, Requires WordPress 4.0.
 
 == Changelog ==
+
+= 2.3.2 =
+ * PHP 7 compatibility
+ * Replaced bundled translations to support Language Packs, see https://translate.wordpress.org/projects/wp-plugins/revision-control
 
 = 2.3.1 =
  * PHP compatability changes (PHP Strict mode warnings)

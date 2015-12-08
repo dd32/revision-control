@@ -4,14 +4,14 @@
  * Plugin URI: http://dd32.id.au/wordpress-plugins/revision-control/
  * Description: Allows finer control over the number of Revisions stored on a global & per-type/page basis.
  * Author: Dion Hulse
- * Version: 2.3.1
+ * Version: 2.3.2
  */
 
 $GLOBALS['revision_control'] = new Plugin_Revision_Control( plugin_basename( __FILE__ ) );
 class Plugin_Revision_Control {
 	var $basename = '';
 	var $folder = '';
-	var $version = '2.3.1';
+	var $version = '2.3.2';
 
 	var $define_failure = false;
 	var $options = array( 'per-type' => array('post' => 'unlimited', 'page' => 'unlimited', 'all' => 'unlimited'), 'revision-range' => '2..5,10,20,50,100' );
@@ -399,12 +399,12 @@ class Plugin_Revision_Control_UI {
 		$right = isset($_GET['right']) ? absint($_GET['right']) : false;
 
 		if ( !$left_revision  = get_post( $left ) )
-			break;
+			return;
 		if ( !$right_revision = get_post( $right ) )
-			break;
+			return;
 
 		if ( !current_user_can( 'read_post', $left_revision->ID ) || !current_user_can( 'read_post', $right_revision->ID ) )
-			break;
+			return;
 
 		// Don't allow reverse diffs?
 		if ( strtotime($right_revision->post_modified_gmt) < strtotime($left_revision->post_modified_gmt) ) {
