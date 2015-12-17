@@ -185,8 +185,8 @@ class Plugin_Revision_Control {
 					break;
 			}
 		} else {
-			$keep = $new;
-		}
+			$keep = max( $new, 0 );
+		}	
 
 		while ( count($items) > $keep ) {
 			$item = array_shift($items);
