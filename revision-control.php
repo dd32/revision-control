@@ -50,7 +50,6 @@ class Plugin_Revision_Control {
 		wp_localize_script('revision-control', 'RevisionControl', 
 						   array(
 							'deleterevisions' => __('Are you sure you wish to delete the selected Revisions?', 'revision-control'),
-							'unlockrevision' => __('Warning: Unlocking this post will cause the latest revision to be published!\nContinue?', 'revision-control'),
 							'selectbothradio' => __('Please select a Left and Right revision to compare', 'revision-control'),
 							'revisioncompare' => __('Revision Compare', 'revision-control')
 							) );
