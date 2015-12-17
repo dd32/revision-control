@@ -4,7 +4,7 @@
  * Plugin URI: https://dd32.id.au/wordpress-plugins/revision-control/
  * Description: Allows finer control over the number of Revisions stored on a global & per-type/page basis.
  * Author: Dion Hulse
- * Version: 2.3.2-beta1
+ * Version: 2.3.2
  */
 
 $GLOBALS['revision_control'] = new Plugin_Revision_Control( plugin_basename( __FILE__ ) );
@@ -685,8 +685,10 @@ class Plugin_Revision_Control_UI {
 		global $revision_control;
 
 		echo "<div class='wrap'>";
-		screen_icon('options-general');
 		echo '<h2>' . __('Revision Control Options', 'revision-control') . '</h2>';
+
+		self::language_notice();
+
 		echo '<h3>' . __('Default revision status for <em>Post Types</em>', 'revision-control') . '</h3>';
 		
 		if ( function_exists('post_type_supports') ) {
@@ -747,5 +749,26 @@ class Plugin_Revision_Control_UI {
 		echo '
 		</form>';
 		echo '</div>';
+	}
+
+	static function language_notice( $force = false ) {
+		$message_english = 'Hi there!
+I notice you use WordPress in a Language other than English (US), Did you know you can translate WordPress Plugins into your native language as well?
+If you\'d like to help out with translating this plugin into %1$s you can head over to <a href="%2$s">translate.WordPress.org</a> and suggest translations for any languages which you know.
+Thanks! Dion.';
+		/* translators: %1$s = The Locale (de_DE, en_US, fr_FR, he_IL, etc). %2$s = The translate.wordpress.org link to the plugin overview */
+		$message = __( 'Hi there!
+I notice you use WordPress in a Language other than English (US), Did you know you can translate WordPress Plugins into your native language as well?
+If you\'d like to help out with translating this plugin into %1$s you can head over to <a href="%2$s">translate.WordPress.org</a> and suggest translations for any languages which you know.
+Thanks! Dion.', 'revision-control' );
+
+		// Don't display the message for English (US) or what we'll assume to be fully translated localised builds.
+		if ( 'en_US' === get_locale() || ( $message == $message_english && ! $force  ) ) {
+			return false;
+		}
+
+		$translate_url = 'https://translate.wordpress.org/projects/wp-plugins/revision-control/stable';
+
+		echo '<div class="notice notice-info"><p>' . sprintf( nl2br( $message ), get_locale(), $translate_url ) . '</p></div>';
 	}
 }
