@@ -2,7 +2,7 @@
 Contributors: dd32
 Tags: revisions, post, admin
 Requires at least: 4.0
-Stable tag: 2.3.1
+Stable tag: 2.3.2
 
 Revision Control allows finer control over the Post Revision system included with WordPress
 
@@ -10,7 +10,7 @@ Revision Control allows finer control over the Post Revision system included wit
 
 Revision Control is a plugin for WordPress which gives the user more control over the Revision functionality.
 
-PLEASE NOTE: Support for this plugin is no longer offered.
+PLEASE NOTE: Active support for this plugin is no longer offered.
 
 The plugin allows the user to set a site-global setting (Settings -> Revisions) for pages/posts to enable/disable/limit the number of revisions which are saved for the page/post. The user may change this setting on a per-page/post basis from the Revisions Meta box.
 
