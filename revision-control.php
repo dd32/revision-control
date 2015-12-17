@@ -568,7 +568,6 @@ class Plugin_Revision_Control_UI {
 		$can_edit_post = true;
 	else
 		$can_edit_post = current_user_can( 'edit_post', $post->ID );
-	//$locked_revision = false;
 
 	if ( empty($revisions) ) {
 		echo "<tr class='no-revisions'>\n";
@@ -585,7 +584,6 @@ class Plugin_Revision_Control_UI {
 		$name = get_the_author_meta( 'display_name', $revision->post_author );
 		
 		$revision_is_current = $post->ID == $revision->ID;
-		/*$revision_is_locked = $revision->ID == $locked_revision;*/
 
 		$class = strpos($class, 'alternate') !== false ? '' : "alternate";
 		
@@ -594,20 +592,12 @@ class Plugin_Revision_Control_UI {
 		if ( $revision_is_current )
 			$class .= ' current-revision';
 		
-		/*if ( $revision_is_locked )
-			$class .= ' locked-revision';*/
-
 		$actions = array();
-		/*if ( !$revision_is_locked )
-			$actions[] = '<a href="#" class="lock" title="' . esc_attr__('Locks the selected revision to be the published copy. This allows you to work on modifications without making them public.', 'revision-control') . '">' . __('Lock', 'revision-control') . '</a>';
-		else
-			$actions[] = '<a href="#" class="unlock">' . __('Unlock', 'revision-control') . '</a>';*/
 		if ( ! $revision_is_current && !wp_is_post_autosave($revision) && $can_edit_post ) {
 			$actions[] = '<a href="' . wp_nonce_url( add_query_arg( array( 'revision' => $revision->ID, 'diff' => false, 'action' => 'restore' ), 'revision.php' ), "restore-post_{$revision->ID}" ) . '">' . __( 'Restore', 'revision-control' ) . '</a>';
-			//$actions[] = '<a href="#" class="hide-if-no-js delete">' . __( 'Delete', 'revision-control' ) . '</a>';
 		}
 
-		$deletedisabled = ( $revision_is_current || wp_is_post_autosave($revision) || ! $can_edit_post ) ? 'disabled="disabled"' : ''; //$revision_is_locked || ($revision_is_current && false === $locked_revision)
+		$deletedisabled = ( $revision_is_current || wp_is_post_autosave($revision) || ! $can_edit_post ) ? 'disabled="disabled"' : '';
 		$lefthidden = $revision == end($revisions) ? ' style="visibility: hidden" ' : '';
 		$righthidden = $revision == $revisions[0] ? ' style="visibility: hidden" ' : '';
 
