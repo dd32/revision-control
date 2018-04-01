@@ -9,9 +9,9 @@ Revision Control allows finer control over the Post Revision system included wit
 
 == Description ==
 
-Revision Control is a plugin for WordPress which gives the user more control over the Revision functionality.
+** Support for this plugin is NOT offered, This plugin still however works. Please don't expect support requests to be answered, or "This doesn't work" reviews to be responded to. **
 
-PLEASE NOTE: Active support for this plugin is no longer offered.
+Revision Control is a plugin for WordPress which gives the user more control over the Revision functionality.
 
 The plugin allows the user to set a site-global setting (Settings -> Revisions) for pages/posts to enable/disable/limit the number of revisions which are saved for the page/post. The user may change this setting on a per-page/post basis from the Revisions Meta box.
 
